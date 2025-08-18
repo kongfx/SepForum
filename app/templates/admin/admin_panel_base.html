@@ -318,7 +318,7 @@
 
         @font-face {
             font-family: "JinShanYunJiShuTi";
-            src: url("/static/fonts/jsyjst.ttf");
+            src: url("/fonts/jsyjst.ttf");
         }
 
         #logo {
@@ -358,8 +358,8 @@
         }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="/static/bootstrap.css">
-    <script src="/static/bootstrap.js"></script>
+    <link rel="stylesheet" href="/bootstrap.css">
+    <script src="/bootstrap.js"></script>
     <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="icon" href="/favicon.ico"/>
     <link rel="shortcut-icon" href="/favicon.ico"/>
@@ -368,20 +368,20 @@
     {% block headextra %}
 
     {% endblock %}
-<link rel="stylesheet" href="/static/katex.min.css"
+<link rel="stylesheet" href="/katex.min.css"
           data-s384="sha384-zh0CIslj+VczCZtlzBcjt5ppRcsAmDnRem7ESsYwWwg3m/OaJ2l4x7YBZl9Kxxib" crossorigin="anonymous">
-    <script defer src="/static/katex.min.js"
+    <script defer src="/katex.min.js"
             data-s384="sha384-Rma6DA2IPUwhNxmrB/7S3Tno0YY7sFu9WSYMCuulLhIqYSGZ2gKCJWIqhBWqMQfh"
             crossorigin="anonymous"></script>
-    <script defer src="/static/katexar.min.js"
+    <script defer src="/katexar.min.js"
             data-s384="sha384-hCXGrW6PitJEwbkoStFjeJxv+fSOOQKOPbJxSfM6G5sWZjAyWhXiTIIAmQqnlLlh"
             crossorigin="anonymous"></script>
-    <script defer src="/static/mathtex-script-type.min.js"></script>
-    <script defer src="/static/mhchem.min.js"></script>
-    <script defer src="/static/copy-tex.min.js"></script>
-    <script defer src="/static/render-a11y-string.min.js"></script>
+    <script defer src="/mathtex-script-type.min.js"></script>
+    <script defer src="/mhchem.min.js"></script>
+    <script defer src="/copy-tex.min.js"></script>
+    <script defer src="/render-a11y-string.min.js"></script>
     <meta charset="utf-8">
-    <script src="/static/swal.js"></script>
+    <script src="/swal.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             renderMathInElement(document.body, {
@@ -420,7 +420,7 @@
     <div id="content">
         <div id="topbar">
             <button id="collapse"><i class="bi bi-list"></i></button>
-            <a id="logo" href="/">班级论坛</a>
+            <a id="logo" href="/">论坛</a>
             <div id="kr"><a class="lnk"
                             href="{{ url_for("user", uid=current_user.id) }}">{{ current_user.username }}</a> | <a
                     class="lnk" href="/">退出后台</a></div>
