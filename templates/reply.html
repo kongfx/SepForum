@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}回帖 #{{ reply.id }}{% endblock %}
+{% block content %}
+    <h3>回帖 #{{ reply.id }}</h3>
+    <div>{{ show_user(reply.user) }} 在 {{ moment(reply.timestamp).format('LLLL') }}
+                    <div style="float:right">
+                        {% if reply.banned %}
+                            被删除的回复<a href="{{ url_for('unban_reply', reply_id=reply.id) }}"
+                                           style="color: #aaa;text-decoration: none">恢复</a>
+                        {% else %}
+                            {% if show_banned_reply or reply.id==current_user.id %}
+                                <a href="{{ url_for('ban_reply', reply_id=reply.id) }}"
+                                   style="color: #aaa;text-decoration: none">删除</a>
+                            {% endif %}
+                        {% endif %} </div>
+                </div>
+    <div>{{ reply.content|safe }}</div>
+    <div>于 <a href="{{ url_for("post", post_id=reply.post.id) }}">{{ reply.post.title }}</a>。</div>
+{% endblock %}

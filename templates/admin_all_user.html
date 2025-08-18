@@ -1,0 +1,37 @@
+{% extends "admin_panel_base.html" %}
+{% block title %}用户管理{% endblock %}
+{% block app %}
+    <h3>用户管理</h3>
+	<table class="table table-hover">
+
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>用户名</th>
+                <th>用户类型</th>
+                <th>权限</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <th>{{ user.id }}</th>
+                    <td>{{ show_user(user) }}</td>
+                    <td>{% if user.confirm_denied %}申请被打回{% elif not user.confirmed %}申请待审核{% elif user.is_ladmin %}管理员{% elif user.banned %}封禁用户{% else %}普通用户{%- endif %}</td>
+                    <td>
+                        {% if user.has_perm(Permission.READ) %}阅读帖子；{% endif %}
+                        {% if user.has_perm(Permission.SEND_POST) %}发布帖子；{% endif %}
+                        {% if user.has_perm(Permission.WRITE_COMMENT) %}发布回帖；{% endif %}
+                        {% if user.has_perm(Permission.MODERATE_DISCUSSION) %}管理帖子；{% endif %}
+                        {% if user.has_perm(Permission.RED_NAME) %}红名；{% endif %}
+                        {% if user.has_perm(Permission.BACKSTAGE_ENTRANCE) %}进入后台；{% endif %}
+                        {% if user.has_perm(Permission.ADMINISTRATOR) %}超级管理；{% endif %}
+                    </td>
+                    <td><a href="{{ url_for('user_admin', user_id=user.id) }}">管理</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ page_util(page,max_page) }}
+{% endblock %}

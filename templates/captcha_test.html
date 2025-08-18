@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block title %}验证码猜猜乐{% endblock %}
+{% block content %}
+    <h1>验证码猜猜乐</h1>
+    <p>我也不知道我做这个干嘛...</p>
+    {{ captcha('acp') }}
+
+    {{ render_form(form) }}
+    {{ message }}
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block title %}Register/注册{% endblock %}
+{% block content %}
+    {{ render_form(form) }}
+        {{ captcha('acp') }}
+
+    <a href="/post/2">用户协议</a>
+{% endblock %}

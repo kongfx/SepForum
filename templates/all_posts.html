@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}帖子列表{% endblock %}
+{% block headextra %}
+    <style>
+        #content-main {
+            border-radius: 0px;
+            background-color: inherit;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .an-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 10px 10px 10px #aaa;
+            padding: 2em;
+            margin: 2em;
+        }
+
+        .ks-title {
+            font-size: 2em;
+            font-weight: bold;
+            color: #000;
+            text-decoration: none;
+            transition: all 200ms ease-in-out;
+        }
+
+        .ks-title:hover {
+            transition: all 200ms ease-in-out;
+            color: #0af;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="an-card">
+    <h1>
+        所有帖子
+    </h1>
+    <p>共找到 {{ post_count }} 个帖子。</p>
+    </div>
+    {% for post in posts %}
+        <div class="an-card">
+            <div><a class="ks-title" href="{{ url_for('post', post_id=post.id) }}">{{ post.title }}</a></div>
+{%  if  post.show_author!=True %}
+                <div>创建者：{{ show_user(post.author) }} 在 {{ moment(post.timestamp).format('LLLL') }}
+                    {% if post.locked %} 已锁定 {% endif %}</div>
+            {% else %}
+                <div>匿名帖子。发布于 {{ moment(post.timestamp).format('LLLL') }}
+                    {% if post.locked %} 已锁定 {% endif %}</div>
+            {% endif %}        </div>
+    {% endfor %}
+    <div class="an-card">
+    {{ page_util(page,max_page) }}
+    </div>
+{% endblock %}

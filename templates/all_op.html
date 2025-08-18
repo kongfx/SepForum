@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}操作列表{% endblock %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block headextra %}
+    <style>
+        #content-main {
+            border-radius: 0px;
+            background-color: inherit;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .an-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 10px 10px 10px #aaa;
+            padding: 2em;
+            margin: 2em;
+        }
+
+        .ks-title {
+            font-size: 2em;
+            font-weight: bold;
+            color: #000;
+            text-decoration: none;
+            transition: all 200ms ease-in-out;
+        }
+
+        .ks-title:hover {
+            transition: all 200ms ease-in-out;
+            color: #0af;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="an-card">
+    <h1>
+        所有操作
+    </h1>
+
+    {{ render_form(form) }}
+            {{ captcha('acp') }}
+
+        {{ page_util(page,max_page) }}
+    </div>
+
+        {% if re %}
+        <div class="an-card">
+            {{ render_table(all_op,responsive=True,userize_columns="user") }}
+        </div>
+
+
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block title %}帖子 - {{ post.title }}{% endblock %}
+{% block headextra %}
+    <style>
+        #content-main {
+            border-radius: 0px;
+            background-color: inherit;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .an-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 10px 10px 10px #aaa;
+            padding: 2em;
+            margin: 2em;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="an-card">
+        <h1>{{ post.title }}</h1>
+        {% if show_name %}
+        <p>创建者：{{ show_user(author) }}</p>
+        {% else %}
+        <p>这是匿名帖子，根据他/她的意愿或版面规定，隐藏他/她的用户名。</p>
+        {% endif %}
+        <p>创建时间：{{ moment(post.timestamp).format('LLLL') }}</p>
+        <p>板块：{{ post.forum.name }}</p>
+        {% if canban %}
+            <a class="btn btn-danger" href="{{ url_for("ban_post", post_id=post.id) }}">删除帖子</a>
+            <a class="btn btn-primary" href="{{ url_for("edit_post", post_id=post.id) }}">编辑帖子</a>
+
+
+        {% endif %}
+        {% if post.banned and current_user.is_admin %}
+            <a class="btn btn-danger" href="{{ url_for("unban_post", post_id=post.id) }}">恢复帖子（仅管理员）</a>
+            <i>Banned post.</i>
+        {% endif %}
+        {% if post.locked %}
+            <p>锁定的帖子。</p>
+        {% endif %}
+        {% if show_banned_reply %}
+            <a class="btn btn-danger" href="{{ url_for("post_admin", post_id=post.id) }}">帖子管理</a>
+            <a class="btn btn-danger" href="{{ url_for("lock_post", post_id=post.id) }}">锁定帖子（仅管理员）</a>
+            <a class="btn btn-success" href="{{ url_for("unlock_post", post_id=post.id) }}">解锁帖子（仅管理员）</a>
+
+        {% endif %}
+    </div>
+    <article class="an-card">
+        {{ post.content|safe }}
+    </article>
+    <div class="an-card">
+        {{ lor }} 条回帖。
+    </div>
+    {% for reply in replies %}
+        {% if reply.banned and not show_banned_reply %}
+        {% else %}
+            <div class="an-card">
+                <div>{{ show_user(reply.user) }} 在 {{ moment(reply.timestamp).format('LLLL') }}
+                    <div style="float:right">
+
+                    <a href="{{ url_for('reply', reply_id=reply.id) }}" style="color: #aaa;text-decoration: none">链接</a> {% if reply.banned %}
+                            被删除的回复<a href="{{ url_for('unban_reply', reply_id=reply.id) }}"
+                                           style="color: #aaa;text-decoration: none">恢复</a>
+                        {% else %}
+                            {% if show_banned_reply or reply.id==current_user.id %}
+                                <a href="{{ url_for('ban_reply', reply_id=reply.id) }}"
+                                   style="color: #aaa;text-decoration: none">删除</a>
+                            {% endif %}
+                        {% endif %} </div>
+                </div>
+                <div>{{ reply.content|safe }}</div>
+            </div>
+        {% endif %}
+    {% endfor %}
+    <div class="an-card">
+        {% if show_form %}
+            {{ render_form(form) }}
+                {{ captcha('acp') }}
+
+        {% else %}
+            此帖已被锁定，无法回复。
+        {% endif %}
+    </div>
+    <div class="an-card">
+        {{ page_util(page,max_page,post_id=post.id) }}
+    </div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "admin_panel_base.html" %}
+{% block title %}审核用户 {{ user.username }}{% endblock %}
+{% block app %}
+    <h3>审核用户 {{ user.username }} #{{ user.id }}</h3>
+	<p>用户状态：{% if user.confirm_denied %}申请被打回{% else %}申请待审核{% endif %}</p>
+    <p>用户理由：</p>
+    <pre>
+{{ user.reg_reason }}
+    </pre>
+    <p>打回理由（如有）</p>
+    <pre>
+{{ user.ban_reason }}
+    </pre>
+    <p><a class="btn btn-success" href="{{ url_for('admin_confirm_user_op_pass', user_id=user.id) }}">通过+下一个（P）</a> <a class="btn btn-danger" href="{{ url_for('admin_confirm_user_op_deny', user_id=user.id) }}">打回/封禁+下一个（[）</a></p>
+    <script>
+        (w=>{
+            w.document.addEventListener('keyup',ev=>{
+                {#console.log(ev.key)#}
+                if(ev.key==='p')
+                    location.pathname = "{{ url_for('admin_confirm_user_op_pass', user_id=user.id) }}";
+                else if (ev.key==='[')
+                    location.pathname = "{{ url_for('admin_confirm_user_op_deny', user_id=user.id) }}";
+
+            });
+        })(window);
+    </script>
+{% endblock %}

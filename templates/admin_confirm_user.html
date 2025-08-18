@@ -1,0 +1,29 @@
+{% extends "admin_panel_base.html" %}
+{% block title %}用户审核{% endblock %}
+{% block app %}
+    <h3>审核用户注册</h3>
+	<table class="table table-hover">
+
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>用户名</th>
+                <th>审核状态</th>
+                <th>申请理由</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <th>{{ user.id }}</th>
+                    <td>{{ user.username }}</td>
+                    <td>{% if user.confirm_denied %}申请被打回{% else %}申请待审核{% endif %}</td>
+                    <td>{{ user.reg_reason[:50] }}</td>
+                    <td><a href="{{ url_for('admin_confirm_user_op', user_id=user.id) }}">审核</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ page_util(page,max_page) }}
+{% endblock %}

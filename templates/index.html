@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}主页面{% endblock %}
+{% block content %}
+    <div>
+        <h3>欢迎回来 {{ show_user(current_user) }}，</h3>
+        今天是 <b>{{ today.year }} 年 {{ today.month }} 月 {{ today.day }} 日</b>，{{ weeknum }}，{{ nongli }}。<br>
+        {{ jieqi }}
+    </div>
+
+{% endblock %}

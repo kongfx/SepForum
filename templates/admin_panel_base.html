@@ -1,0 +1,446 @@
+{% from 'bootstrap5/utils.html' import render_messages %}
+
+{% macro show_user(user) %}
+    {% if user.is_authenticated %}
+        <a class="username_text" href="{{ url_for("user",uid=user.id) }}">
+            {% if user.banned %}
+                <span class="user-banned">{{ user.username }}</span>
+                {% set color="banned" %}
+            {% elif user.is_ladmin %}
+                <span class="user-purple">{{ user.username }}</span>
+                {% set color="purple" %}
+
+            {% elif user.perm//16==1 %}
+                <span class="user-red">{{ user.username }}</span>
+                {% set color="red" %}
+
+            {% else %}
+                <span class="user-blue">{{ user.username }}</span>
+                {% set color="blue" %}
+
+            {% endif %}
+            {% if user.verified %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="#3498db"
+                     style="margin-bottom: 3px;">
+                    <path d="M16 8C16 6.84375 15.25 5.84375 14.1875 5.4375C14.6562 4.4375 14.4688 3.1875 13.6562 2.34375C12.8125 1.53125 11.5625 1.34375 10.5625 1.8125C10.1562 0.75 9.15625 0 8 0C6.8125 0 5.8125 0.75 5.40625 1.8125C4.40625 1.34375 3.15625 1.53125 2.34375 2.34375C1.5 3.1875 1.3125 4.4375 1.78125 5.4375C0.71875 5.84375 0 6.84375 0 8C0 9.1875 0.71875 10.1875 1.78125 10.5938C1.3125 11.5938 1.5 12.8438 2.34375 13.6562C3.15625 14.5 4.40625 14.6875 5.40625 14.2188C5.8125 15.2812 6.8125 16 8 16C9.15625 16 10.1562 15.2812 10.5625 14.2188C11.5938 14.6875 12.8125 14.5 13.6562 13.6562C14.4688 12.8438 14.6562 11.5938 14.1875 10.5938C15.25 10.1875 16 9.1875 16 8ZM11.4688 6.625L7.375 10.6875C7.21875 10.8438 7 10.8125 6.875 10.6875L4.5 8.3125C4.375 8.1875 4.375 7.96875 4.5 7.8125L5.3125 7C5.46875 6.875 5.6875 6.875 5.8125 7.03125L7.125 8.34375L10.1562 5.34375C10.3125 5.1875 10.5312 5.1875 10.6562 5.34375L11.4688 6.15625C11.5938 6.28125 11.5938 6.5 11.4688 6.625Z"></path>
+                </svg>
+            {% endif %}
+            {% if user.badge or user.banned %}
+                {% if user.banned %}
+                    <span class="tag tag-ban">封禁用户</span>{% else %}
+                    <span class="tag tag-{{ color }}">{{ user.badge }}</span>
+                {% endif %}
+            {% endif %}
+        </a>
+    {% else %}
+        <span style="color:#999">未登录用户</span>
+    {% endif %}
+{%- endmacro %}
+{% macro page_util(current,max_page) %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if current == 1 %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Previous" href="#">&lt;</a>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" aria-label="Previous"
+                       href="{{ url_for(request.endpoint, page=current-1, **kwargs) }}">&lt;</a>
+                </li>
+            {%- endif %}
+            {% if max_page < 14 %}
+
+                {% for i in range(1,max_page+1) %}
+                    {% if i!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=i, **kwargs) }}">{{ i }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ i }}</a>
+                        </li>
+                    {%- endif %}
+                {%- endfor %}
+
+            {% else %}
+                {% for i in range(1,4) %}
+                    {% if i!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=i, **kwargs) }}">{{ i }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ i }}</a>
+                        </li>
+                    {%- endif %}
+                {%- endfor %}
+                {% if current == 4 or current == 3 %}
+                    {% if 4!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=4, **kwargs) }}">4</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">4</a>
+                        </li>
+                    {%- endif %}
+                    {% if 5!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=5, **kwargs) }}">5</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">5</a>
+                        </li>
+                    {%- endif %}
+                    <li class="page-item">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                {% elif current == max_page-3 or current==max_page-2 %}
+                    <li class="page-item">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                    {% if max_page-4!=current %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="{{ url_for(request.endpoint, page=max_page-4, **kwargs) }}">{{ max_page-4 }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ max_page-4 }}</a>
+                        </li>
+                    {%- endif %}
+                    {% if max_page-3!=current %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="{{ url_for(request.endpoint, page=max_page-3, **kwargs) }}">{{ max_page-3 }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ max_page-3 }}</a>
+                        </li>
+                    {%- endif %}
+                {% else %}
+                    {% if current>2 %}
+                        <li class="page-item">
+                            <a class="page-link" href="#">...</a>
+                        </li>
+                    {%- endif %}
+                    {% for i in range(current-2,current+3) %}
+                        {% if i >= 4 and i <= max_page-3 %}
+                            {% if i!=current %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="{{ url_for(request.endpoint, page=i, **kwargs) }}">{{ i }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active" aria-current="page">
+                                    <a class="page-link" href="#">{{ i }}</a>
+                                </li>
+                            {%- endif %}
+                        {%- endif %}
+                    {%- endfor %}
+                    {% if current<max_page-1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="#">...</a>
+                        </li>
+                    {%- endif %}
+                {%- endif %}
+                {% for i in range(max_page-2,max_page+1) %}
+                    {% if i!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=i, **kwargs) }}">{{ i }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ i }}</a>
+                        </li>
+                    {%- endif %}
+                {%- endfor %}
+            {%- endif %}
+            {% if current == max_page %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Next" href="#">&gt;</a>
+                </li>
+            {%- else %}
+                <li class="page-item">
+                    <a class="page-link" aria-label="Next"
+                       href="{{ url_for(request.endpoint, page=current+1, **kwargs) }}">&gt;</a>
+                </li>
+            {%- endif %}
+        </ul>
+    </nav>
+{%- endmacro %}
+{% macro captcha(id) %}
+    <img src="{{ url_for('gen_captcha') }}?t={{ timestamp }}" alt="CAPTCHA" id="{{ id }}">
+    <script>(d => {
+        const _c = d.getElementById("{{id}}");
+        _c.addEventListener('click', _ => {
+            _c.src = "{{url_for('gen_captcha')}}?t=" + new Date().getTime()
+        })
+    })(document);</script>
+{% endmacro %}
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>论坛管理后台 - {% block title %}{% endblock %}</title>
+    <style>
+        .username_text {
+            text-decoration: none;
+        }
+
+
+        .user-blue {
+            color: rgb(14, 114, 210);
+        }
+
+        .user-red {
+            color: rgb(231, 76, 60);
+            font-weight: bold;
+
+        }
+
+        .user-banned {
+            color: rgb(173, 139, 0);
+        }
+
+        .user-purple {
+            color: rgb(142, 68, 173);
+            font-weight: bold;
+        }
+
+        .tag {
+            color: white;
+            padding: 3px;
+            border-radius: 4px;
+            margin: 1px 1px 1px 3px;
+
+        }
+
+        .tag-ban {
+            background: rgb(173, 139, 0);
+
+        }
+
+        .tag-red {
+            background: rgb(231, 76, 60);
+        }
+
+        .tag-blue {
+            background: rgb(14, 114, 210);
+        }
+
+        .tag-purple {
+            background: rgb(142, 68, 173);
+        }
+
+        blockquote {
+            padding: 1px 20px;
+            margin: 0 0 20px;
+            border-left: 5px solid #eee;
+        }
+
+        #wrapper {
+            display: flex;
+            height: 100%;
+        }
+
+        #sidebar {
+        {#flex:1;#} background: #222;
+            color: #eee;
+            height: 100vh;
+            width: 200px;
+            transition: all 0.55s ease-in-out 0.05s;
+            padding: 3.5em 0.55em 0.55em;
+            position: sticky;
+            top: 0;
+        }
+
+        #sidebar > ul {
+            list-style-type: none;
+        }
+
+        #sidebar.sz {
+            width: 50px;
+            transition: all 0.55s ease-in-out 0.05s;
+        {#padding:0.2em;#}
+        }
+
+        #sidebar > ul {
+            padding-left: 0.5em;
+        }
+
+        #sidebar.sz > ul > li > a > span {
+        {#display: none;#}{#   opacity:0;#} height: 0;
+            width: 0;
+            transition: all 0.55s ease-in-out 0.15s;
+            margin-left: 0;
+
+        }
+
+        #sidebar > ul > li > a > span {
+            display: inline-block;
+
+            margin-left: 1em;
+            transition: all 0.55s ease-in-out 0.05s;
+            overflow: hidden;
+            position: relative;
+            top: 0.3em;
+        {#padding-top:0.5em;#}
+        }
+
+        {# #sidebar > ul > li > a > i {#}
+        {#     padding-bottom: 0.1em;#}
+        #sidebar > ul > li {
+            position: relative;
+            word-break:keep-all;
+            margin-bottom:1em;
+        }
+
+        #content {
+            flex: 1;
+
+        }
+
+        body {
+            height: 100%;
+        }
+
+        #topbar {
+            background: #fafafa;
+            border-bottom: 1px solid #ddd;
+            height: 50px;
+            position: sticky;
+            padding: 2px;
+            top: 0;
+        }
+
+        @font-face {
+            font-family: "JinShanYunJiShuTi";
+            src: url("/static/fonts/jsyjst.ttf");
+        }
+
+        #logo {
+            font-family: "JinShanYunJiShuTi", sans-serif;
+            font-size: 2em;
+            color: #111;
+            text-decoration: none;
+            padding-left: 0.5em;
+        }
+
+        #collapse {
+            background: transparent;
+            border: none;
+            font-size: 1.5em;
+            padding-bottom: 0.1em;
+        }
+
+        #app {
+            padding: 2em;
+        }
+
+        #sidebar a {
+            color: #eee;
+            text-decoration: none;
+        }
+
+        #kr {
+            float: right;
+            vertical-align: center;
+            margin-top: 0.5em;
+        }
+
+        .lnk {
+            text-decoration: none;
+            color: #111;
+
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/static/bootstrap.css">
+    <script src="/static/bootstrap.js"></script>
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="icon" href="/favicon.ico"/>
+    <link rel="shortcut-icon" href="/favicon.ico"/>
+    {{ moment.include_moment() }}
+    {{ moment.locale(auto_detect=True) }}
+    {% block headextra %}
+
+    {% endblock %}
+<link rel="stylesheet" href="/static/katex.min.css"
+          data-s384="sha384-zh0CIslj+VczCZtlzBcjt5ppRcsAmDnRem7ESsYwWwg3m/OaJ2l4x7YBZl9Kxxib" crossorigin="anonymous">
+    <script defer src="/static/katex.min.js"
+            data-s384="sha384-Rma6DA2IPUwhNxmrB/7S3Tno0YY7sFu9WSYMCuulLhIqYSGZ2gKCJWIqhBWqMQfh"
+            crossorigin="anonymous"></script>
+    <script defer src="/static/katexar.min.js"
+            data-s384="sha384-hCXGrW6PitJEwbkoStFjeJxv+fSOOQKOPbJxSfM6G5sWZjAyWhXiTIIAmQqnlLlh"
+            crossorigin="anonymous"></script>
+    <script defer src="/static/mathtex-script-type.min.js"></script>
+    <script defer src="/static/mhchem.min.js"></script>
+    <script defer src="/static/copy-tex.min.js"></script>
+    <script defer src="/static/render-a11y-string.min.js"></script>
+    <meta charset="utf-8">
+    <script src="/static/swal.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                // customised options
+                // • auto-render specific keys, e.g.:
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                // • rendering keys, e.g.:
+                throwOnError: false
+            });
+        });
+    </script>
+</head>
+<body>
+<div id="wrapper">
+    <div id="sidebar">
+        <ul>
+            <li><a href="{{ url_for("admin") }}"><i class="bi bi-pie-chart-fill"></i><span>概览</span></a></li>
+            {#        <li>BBB</li>#}
+            {% if current_user.is_admin %}
+                <li><a href="{{ url_for("admin_all_user") }}"><i class="bi bi-people-fill"></i><span>用户管理</span></a>
+                </li>
+                <li><a href="{{ url_for("admin_confirm_user") }}"><i class="bi bi-file-earmark-check"></i><span>用户审核</span></a>
+            {% endif %}
+            {% if current_user.has_perm(Permission.MODERATE_DISCUSSION) %}
+                <li><a href="{{ url_for("admin_all_post") }}"><i class="bi bi-pencil-square"></i><span>帖子管理</span></a>
+                </li>
+                <li><a href="{{ url_for("admin") }}"><i class="bi bi-reply-fill"></i><span>回帖管理</span></a></li>
+            {% endif %}
+        </ul>
+    </div>
+    <div id="content">
+        <div id="topbar">
+            <button id="collapse"><i class="bi bi-list"></i></button>
+            <a id="logo" href="/">班级论坛</a>
+            <div id="kr"><a class="lnk"
+                            href="{{ url_for("user", uid=current_user.id) }}">{{ current_user.username }}</a> | <a
+                    class="lnk" href="/">退出后台</a></div>
+        </div>
+        <div id="app">
+            <div style="margin:1em">
+                {{ render_messages() }}
+            </div>
+            {% block app %}{% endblock %}
+        </div>
+    </div>
+</div>
+<script>
+    addEventListener("load", _ => {
+        const btn = document.getElementById('collapse');
+        const sdb = document.getElementById('sidebar');
+        btn.addEventListener("click", e => {
+            sdb.classList.toggle("sz");
+        });
+    })
+</script>
+</body>
+</html>

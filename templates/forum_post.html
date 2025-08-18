@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}帖子列表{% endblock %}
+{% block headextra %}
+    <style>
+        #content-main {
+            border-radius: 0px;
+            background-color: inherit;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .an-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 10px 10px 10px #aaa;
+            padding: 2em;
+            margin: 2em;
+        }
+
+        .ks-title {
+
+            color: #000;
+            text-decoration: none;
+            transition: all 200ms ease-in-out;
+        }
+
+        .ks-big {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .ks-title:hover {
+            transition: all 200ms ease-in-out;
+            color: #0af;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="an-card">
+        <h1>{{ forum.name }}</h1>
+        <p>{{ forum.description }}</p>
+    </div>
+        <p class="an-card">共找到 {{ post_count }} 个帖子。</p>
+
+    {% for post in posts %}
+        <a class="ks-title" href="{{ url_for('post', post_id=post.id) }}">
+            <div class="an-card">
+                <div class="ks-big">{{ post.title }}</div>
+            {%  if  post.show_author!=True %}
+                <div>创建者：{{ show_user(post.author) }} 在 {{ moment(post.timestamp).format('LLLL') }}
+                    {% if post.locked %} 已锁定 {% endif %}</div>
+            {% else %}
+                <div>匿名帖子。发布于 {{ moment(post.timestamp).format('LLLL') }}
+                    {% if post.locked %} 已锁定 {% endif %}</div>
+            {% endif %}
+            </div>
+        </a>
+    {% endfor %}
+        {{ page_util(page,max_page, forum_id=forum.id) }}
+
+{% endblock %}

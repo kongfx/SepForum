@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}发表帖子{% endblock %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block content %}
+    {{ render_form(form) }}
+        {{ captcha('acp') }}
+
+    <p>希望更丰富的展现？使用 Markdown、KaTeX。</p>
+{% endblock %}

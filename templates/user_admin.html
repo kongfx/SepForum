@@ -1,0 +1,9 @@
+{% extends "admin_panel_base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block title %}用户管理{% endblock %}
+{% block app %}
+    {{ show_user(user) }}
+    {{ render_form(form) }}
+    {{ captcha('acp') }}
+
+{% endblock %}

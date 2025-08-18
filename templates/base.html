@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+
+{% from 'bootstrap5/utils.html' import render_messages %}
+{% from 'base/utils.html' import render_icon, arg_url_for %}
+
+
+{% macro build_url(record, endpoint, url_tuples, model, pk_field) %}
+    {% if model != None %}
+        {% set record = model.query.get(record[pk_field]) %}
+    {% endif %}
+    {% with url_params = {} -%}
+        {%- do url_params.update(request.view_args if not endpoint else {}),
+            url_params.update(request.args if not endpoint else {}) -%}
+            {% for url_parameter, db_field in url_tuples %}
+                {% if db_field.startswith(':') and '.' in db_field %}
+                    {%- set db_field = db_field[1:].split('.') -%}
+                    {%- do url_params.update({url_parameter: record[db_field[0]][db_field[1]]}) -%}
+                {% elif db_field.startswith(':') %}
+                    {%- set db_field = db_field[1:] -%}
+                    {%- do url_params.update({url_parameter: record[db_field]}) -%}
+                {% else %}
+                    {%- do url_params.update({url_parameter: db_field}) -%}
+                {% endif %}
+            {% endfor %}
+        {{ arg_url_for(endpoint, url_params) }}
+    {%- endwith %}
+{%- endmacro %}
+
+{% macro render_table(data,
+                      titles=None,
+                      primary_key='id',
+                      primary_key_title='#',
+                      caption=None,
+                      table_classes=None,
+                      header_classes=None,
+                      body_classes=None,
+                      responsive=False,
+                      responsive_class='table-responsive',
+                      safe_columns=None,
+                      userize_columns=None,
+                      model=None,
+                      show_actions=False,
+                      actions_title='Actions',
+                      custom_actions=None,
+                      view_url=None,
+                      edit_url=None,
+                      delete_url=None,
+                      new_url=None,
+                      action_pk_placeholder=':id') %}
+{% if not titles %}
+    {% set titles = get_table_titles(data, primary_key, primary_key_title) %}
+{% endif %}
+{% if responsive %}
+    <div class="{{ responsive_class }}">
+{% endif %}
+<table class="table{% if table_classes %}{{ ' ' + table_classes }}{% endif %}">
+    {% if caption %}
+    <caption>{{ caption }}</caption>
+    {% endif %}
+    <thead{% if header_classes %} class="{{ header_classes }}"{% endif %}>
+    <tr>
+    {% for title in titles %}
+        <th scope="col">{{ title[1] }}</th>
+    {% endfor %}
+    {% if show_actions %}
+        <th scope="col">{{ actions_title }}
+        {% if new_url %}
+            <a class="action-icon text-decoration-none"
+                {% if new_url.startswith('/') %}
+                href="{{ new_url }}"
+                {% else %}
+                href="{{ url_for(new_url) }}"
+                {% endif %}
+                title="{{ config['BOOTSTRAP_TABLE_NEW_TITLE'] }}">
+                {{ render_icon('plus-circle-fill') }}
+            </a>
+        {% endif %}
+        </th>
+    {% endif %}
+    </tr>
+    </thead>
+    <tbody{% if body_classes %} class="{{ body_classes }}"{% endif %}>
+    {% for row in data %}
+    <tr>
+        {% for title in titles %}
+        {% set key = title[0] %}
+        {% set value = row[key] %}
+        {%- if key == primary_key -%}
+            <th scope="row">
+        {%- else -%}
+            <td>
+        {%- endif -%}
+        {%- if value is string -%}
+            {%- if safe_columns and key in safe_columns -%}
+                {{ value|safe }}
+            {%- else -%}
+                {%- if userize_columns and key in userize_columns -%}
+                    {{ render_user(value)}}
+                {%- else -%}
+                    {{ value }}
+                {%- endif -%}
+            {%- endif -%}
+        {%- elif value.__class__.__base__.__name__ == 'Enum' -%}
+            {{ value.value }}
+        {%- else -%}
+            {{ value }}
+        {%- endif -%}
+        {%- if key == primary_key -%}
+            </th>
+        {%- else -%}
+            </td>
+        {%- endif -%}
+        {% endfor %}
+        {% if show_actions %}
+        <td>
+            {% if custom_actions %}
+            {% for (action_name, action_icon, action_url) in custom_actions %}
+                <a class="action-icon text-decoration-none"
+                   {% if action_url is string %}
+                    href="{{ action_url }}"
+                   {% else %}
+                    href="{{ build_url(row, action_url[0], action_url[1], model, primary_key) | trim }}"
+                   {% endif %}
+                    title="{{ action_name }}">{{ render_icon(action_icon) }}</a>
+            {% endfor %}
+            {% endif %}
+            {% if view_url %}
+                <a class="action-icon text-decoration-none"
+                   {% if view_url is string %}
+                    href="{{ view_url }}"
+                   {% else %}
+                    href="{{ build_url(row, view_url[0], view_url[1], model, primary_key) | trim }}"
+                   {% endif %}
+                    title="{{ config['BOOTSTRAP_TABLE_VIEW_TITLE'] }}">
+                    {{ render_icon('eye-fill') }}
+                </a>
+            {% endif %}
+            {% if edit_url -%}
+                <a class="action-icon text-decoration-none"
+                   {% if edit_url is string %}
+                    href="{{ edit_url }}"
+                   {% else %}
+                    href="{{ build_url(row, edit_url[0], edit_url[1], model, primary_key) | trim }}"
+                   {% endif %}
+                    title="{{ config['BOOTSTRAP_TABLE_EDIT_TITLE'] }}">
+                    {{ render_icon('pencil-fill') }}
+                </a>
+            {%- endif %}
+            {% if delete_url %}
+            <form class="d-inline"
+                  {% if delete_url is string %}
+                   action="{{ delete_url }}"
+                  {% else %}
+                   action="{{ build_url(row, delete_url[0], delete_url[1], model, primary_key) | trim }}"
+                  {% endif %}
+                   method="post">
+                  {% if csrf_token is undefined %}
+                  {{ raise('You have to enable the CSRFProtect extension from Flask-WTF to use delete_url, see the docs for more details (https://bootstrap-flask.readthedocs.io/en/stable/macros.html#render-table).') }}
+                  {% endif %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn btn-link p-0 border-0 align-baseline" title="{{ config['BOOTSTRAP_TABLE_DELETE_TITLE'] }}">
+                    {{ render_icon('trash-fill') }}
+                </button>
+            </form>
+            {% endif %}
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% if responsive %}
+    </div>
+{% endif %}
+{% endmacro %}
+{% macro show_user(user) %}
+    {% if user.is_authenticated %}
+        <a class="username_text" href="{{ url_for("user",uid=user.id) }}">
+        {% if user.banned %}
+            <span class="user-banned">{{ user.username }}</span>
+            {% set color="banned" %}
+        {% elif user.is_ladmin %}
+            <span class="user-purple">{{ user.username }}</span>
+            {% set color="purple" %}
+
+        {% elif user.perm//16==1 %}
+            <span class="user-red">{{ user.username }}</span>
+            {% set color="red" %}
+
+        {% else %}
+            <span class="user-blue">{{ user.username }}</span>
+            {% set color="blue" %}
+
+        {% endif %}
+        {% if user.verified %}
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="#3498db"
+                 style="margin-bottom: 3px;">
+                <path d="M16 8C16 6.84375 15.25 5.84375 14.1875 5.4375C14.6562 4.4375 14.4688 3.1875 13.6562 2.34375C12.8125 1.53125 11.5625 1.34375 10.5625 1.8125C10.1562 0.75 9.15625 0 8 0C6.8125 0 5.8125 0.75 5.40625 1.8125C4.40625 1.34375 3.15625 1.53125 2.34375 2.34375C1.5 3.1875 1.3125 4.4375 1.78125 5.4375C0.71875 5.84375 0 6.84375 0 8C0 9.1875 0.71875 10.1875 1.78125 10.5938C1.3125 11.5938 1.5 12.8438 2.34375 13.6562C3.15625 14.5 4.40625 14.6875 5.40625 14.2188C5.8125 15.2812 6.8125 16 8 16C9.15625 16 10.1562 15.2812 10.5625 14.2188C11.5938 14.6875 12.8125 14.5 13.6562 13.6562C14.4688 12.8438 14.6562 11.5938 14.1875 10.5938C15.25 10.1875 16 9.1875 16 8ZM11.4688 6.625L7.375 10.6875C7.21875 10.8438 7 10.8125 6.875 10.6875L4.5 8.3125C4.375 8.1875 4.375 7.96875 4.5 7.8125L5.3125 7C5.46875 6.875 5.6875 6.875 5.8125 7.03125L7.125 8.34375L10.1562 5.34375C10.3125 5.1875 10.5312 5.1875 10.6562 5.34375L11.4688 6.15625C11.5938 6.28125 11.5938 6.5 11.4688 6.625Z"></path>
+            </svg>
+        {% endif %}
+        {% if user.badge or user.banned %}
+            {% if user.banned %}
+                <span class="tag tag-ban">封禁用户</span>{% else %}
+                <span class="tag tag-{{ color }}">{{ user.badge }}</span>
+            {% endif %}
+        {% endif %}
+        </a>
+    {% else %}
+        <span style="color:#999">未登录用户</span>
+    {% endif %}
+{%- endmacro %}
+{% macro page_util(current,max_page) %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if current == 1 %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Previous" href="#">&lt;</a>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" aria-label="Previous"
+                       href="{{ url_for(request.endpoint, page=current-1, **kwargs) }}">&lt;</a>
+                </li>
+            {%- endif %}
+            {% if max_page < 14 %}
+
+                {% for i in range(1,max_page+1) %}
+                    {% if i!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=i, **kwargs) }}">{{ i }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ i }}</a>
+                        </li>
+                    {%- endif %}
+                {%- endfor %}
+
+            {% else %}
+                {% for i in range(1,4) %}
+                    {% if i!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=i, **kwargs) }}">{{ i }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ i }}</a>
+                        </li>
+                    {%- endif %}
+                {%- endfor %}
+                {% if current == 4 or current == 3 %}
+                    {% if 4!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=4, **kwargs) }}">4</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">4</a>
+                        </li>
+                    {%- endif %}
+                    {% if 5!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=5, **kwargs) }}">5</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">5</a>
+                        </li>
+                    {%- endif %}
+                    <li class="page-item">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                {% elif current == max_page-3 or current==max_page-2 %}
+                    <li class="page-item">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                    {% if max_page-4!=current %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="{{ url_for(request.endpoint, page=max_page-4, **kwargs) }}">{{ max_page-4 }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ max_page-4 }}</a>
+                        </li>
+                    {%- endif %}
+                    {% if max_page-3!=current %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="{{ url_for(request.endpoint, page=max_page-3, **kwargs) }}">{{ max_page-3 }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ max_page-3 }}</a>
+                        </li>
+                    {%- endif %}
+                {% else %}
+                    {% if current>2 %}
+                        <li class="page-item">
+                            <a class="page-link" href="#">...</a>
+                        </li>
+                    {%- endif %}
+                    {% for i in range(current-2,current+3) %}
+                        {% if i >= 4 and i <= max_page-3 %}
+                            {% if i!=current %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="{{ url_for(request.endpoint, page=i, **kwargs) }}">{{ i }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active" aria-current="page">
+                                    <a class="page-link" href="#">{{ i }}</a>
+                                </li>
+                            {%- endif %}
+                        {%- endif %}
+                    {%- endfor %}
+                    {% if current<max_page-1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="#">...</a>
+                        </li>
+                    {%- endif %}
+                {%- endif %}
+                {% for i in range(max_page-2,max_page+1) %}
+                    {% if i!=current %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=i, **kwargs) }}">{{ i }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">{{ i }}</a>
+                        </li>
+                    {%- endif %}
+                {%- endfor %}
+            {%- endif %}
+            {% if current == max_page %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Next" href="#">&gt;</a>
+                </li>
+            {%- else %}
+                <li class="page-item">
+                    <a class="page-link" aria-label="Next"
+                       href="{{ url_for(request.endpoint, page=current+1, **kwargs) }}">&gt;</a>
+                </li>
+            {%- endif %}
+        </ul>
+    </nav>
+{%- endmacro %}
+{% macro captcha(id) %}
+    <img src="{{ url_for('gen_captcha') }}?t={{timestamp}}" alt="CAPTCHA" id="{{ id }}">
+    <script>(d=>{const _c=document.getElementById("{{id}}");_c.addEventListener('click',_=>{_c.src="{{url_for('gen_captcha')}}?t="+new Date().getTime()})})(document);</script>
+{% endmacro %}
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>班级论坛 - {% block title %}BasePage{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/static/bootstrap.css">
+    <script src="/static/bootstrap.js"></script>
+    <style>
+        header {
+            color: white;
+            background: #0a53be;
+            padding: 5px;
+            position: sticky;
+            top: 0;
+        }
+
+        .username_text {
+            text-decoration: none;
+        }
+
+        .headtext {
+            margin: 1rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .ht-big {
+            font-size: 2.5em;
+
+        }
+
+        #content-main {
+            margin: 8px;
+            padding: 2.25em;
+        }
+
+        .user-blue {
+            color: rgb(14, 114, 210);
+        }
+
+        .user-red {
+            color: rgb(231, 76, 60);
+            font-weight: bold;
+
+        }
+
+        .user-banned {
+            color: rgb(173, 139, 0);
+        }
+
+        .user-purple {
+            color: rgb(142, 68, 173);
+            font-weight: bold;
+        }
+
+        .tag {
+            color: white;
+            padding: 3px;
+            border-radius: 4px;
+            margin: 1px 1px 1px 3px;
+
+        }
+
+        .tag-ban {
+            background: rgb(173, 139, 0);
+
+        }
+
+        .tag-red {
+            background: rgb(231, 76, 60);
+        }
+
+        .tag-blue {
+            background: rgb(14, 114, 210);
+        }
+
+        .tag-purple {
+            background: rgb(142, 68, 173);
+        }
+
+        body {
+            background: #eee;
+        }
+
+        #content-main {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 10px 10px 10px #aaa;
+
+        }
+
+        blockquote {
+            padding: 1px 20px;
+            margin: 0 0 20px;
+            border-left: 5px solid #eee;
+        }
+        @font-face {
+            font-family: "JinShanYunJiShuTi";
+            src: url("/static/fonts/jsyjst.ttf");
+        }
+        #logo {
+            font-family: "JinShanYunJiShuTi", sans-serif;
+        }
+    </style>
+    {% block headextra %}
+
+    {% endblock %}
+    <link rel="stylesheet" href="/static/katex.min.css"
+          data-s384="sha384-zh0CIslj+VczCZtlzBcjt5ppRcsAmDnRem7ESsYwWwg3m/OaJ2l4x7YBZl9Kxxib" crossorigin="anonymous">
+    <script defer src="/static/katex.min.js"
+            data-s384="sha384-Rma6DA2IPUwhNxmrB/7S3Tno0YY7sFu9WSYMCuulLhIqYSGZ2gKCJWIqhBWqMQfh"
+            crossorigin="anonymous"></script>
+    <script defer src="/static/katexar.min.js"
+            data-s384="sha384-hCXGrW6PitJEwbkoStFjeJxv+fSOOQKOPbJxSfM6G5sWZjAyWhXiTIIAmQqnlLlh"
+            crossorigin="anonymous"></script>
+    <script defer src="/static/mathtex-script-type.min.js"></script>
+    <script defer src="/static/mhchem.min.js"></script>
+    <script defer src="/static/copy-tex.min.js"></script>
+    <script defer src="/static/render-a11y-string.min.js"></script>
+    <meta charset="utf-8">
+    <script src="/static/swal.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                // customised options
+                // • auto-render specific keys, e.g.:
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                // • rendering keys, e.g.:
+                throwOnError: false
+            });
+        });
+    </script>
+<link rel="icon" href="/favicon.ico"/>
+<link rel="shortcut-icon" href="/favicon.ico"/>
+
+    {{ moment.include_moment() }}
+    {{ moment.locale(auto_detect=True) }}
+</head>
+<body>
+<div id="app">
+    <header>
+
+        <a class="headtext ht-big logo" href="/" id="logo">班级论坛<!-- <img src="/static/icon.png" alt="班级论坛" height="100"/>--></a>
+        <a href="/forum/_all" style="font-size:1em;" class="headtext">所有板块</a>
+        <a href="/post/_new" style="font-size:1em;" class="headtext">发布帖子</a>
+            <a href="/operations" style="font-size:1em;" class="headtext">所有操作</a>
+        {% if current_user.is_authenticated and current_user.is_ladmin %}
+        <a href="{{ url_for("admin") }}" style="font-size:1em;" class="headtext">后台</a>
+        {%- endif -%}
+        {% if current_user.is_authenticated %}
+            <span style="float:right;font-size:1em" class="headtext"><a class="headtext" href="{{ url_for('user', uid=current_user.id) }}" style="margin:unset;">{{ current_user.username }}</a> | <a
+                    href="/auth/logout" style="text-decoration: none;color:white">Logout</a></span>
+        {% else %}
+            <a href="/auth/login" style="float:right;font-size:1em" class="headtext">Login</a>
+        {% endif %}
+    </header>
+    <div style="margin:1em">
+        {{ render_messages() }}
+    </div>
+    <div id="content-main">
+
+        {% block content %}
+
+        {% endblock %}
+    </div>
+</div>
+</body>
+</html>

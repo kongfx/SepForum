@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>班级论坛 - 出错了</title>
+    <style>
+        body {
+            background: #e6e6e6;
+            {#display: flex;#}
+            {#flex-direction: column;#}
+            {#justify-content: center;#}
+            {#vertical-align: center;#}
+
+        }
+
+        #content {
+            background: #fff;
+            box-shadow: 0 1px 10px 0px #1a1a1a1a;
+            {#margin: auto;#}
+            max-width: 33%;
+            max-height: 33%;
+            padding:2em 5em 5em 5em;
+
+            {#justify-content: center;#}
+            {#display: flex;#}
+            {#flex-direction: column;#}
+        }
+
+        @media screen and (max-width: 800px) and (max-height: 800px) {
+            body {
+                background: unset;
+            }
+            #content {
+                background: unset;
+                box-shadow: unset;
+                margin: unset;
+                max-height: unset;
+                max-width: unset;
+            }
+        }
+        #code {
+            font-size: 1.5em;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+        }
+        .cnt {
+            display: flex;
+            {#flex-direction: column;#}
+            justify-content: center;
+        }
+        .col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+<div class="col">
+<div class="cnt">
+<div id="content">
+    <div class="row"><h1>班级论坛</h1></div>
+    <div class="row"><p>服务器遇到了一些小问题。请你帮忙反馈这个问题。反馈时请你提供如下编码：</p></div>
+    <div class="row"><span id="code">{{ code }}</span></div>
+</div>
+</div></div>
+</body>
+</html>
+
+
+
+
+

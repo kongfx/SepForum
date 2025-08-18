@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block title %}测试分页器{% endblock %}
+{% block content %}
+    {{ page_util(curr,max_page, max_pagec=max_page) }}
+{% endblock %}

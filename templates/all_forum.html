@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}板块列表{% endblock %}
+{% block headextra %}
+    <style>
+        #content-main {
+            border-radius: 0px;
+            background-color: inherit;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .an-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 10px 10px 10px #aaa;
+            padding: 2em;
+            margin: 2em;
+        }
+
+        .ks-title {
+
+            color: #000;
+            text-decoration: none;
+            transition: all 200ms ease-in-out;
+        }
+
+        .ks-big {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .ks-title:hover {
+            transition: all 200ms ease-in-out;
+            color: #0af;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="an-card">
+        <h1>
+            所有板块
+        </h1>
+    </div>
+    {% for frm in forums %}
+        <div class="an-card">
+            <a class="ks-title" href="{{ url_for('forum', forum_id=frm.id) }}">
+                <div class="ks-big">{{ frm.name }}</div>
+                <div>{{ frm.description }}</div>
+            </a>
+        </div>
+    {% endfor %}
+{% endblock %}

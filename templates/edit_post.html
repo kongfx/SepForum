@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block title %}帖子编辑 - {{ post.title }}{% endblock %}
+{% block headextra %}
+    <style>
+        #content-main {
+            border-radius: 0px;
+            background-color: inherit;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .an-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 10px 10px 10px #aaa;
+            padding: 2em;
+            margin: 2em;
+        }
+
+        .ks-title {
+            font-size: 2em;
+            font-weight: bold;
+            color: #000;
+            text-decoration: none;
+            transition: all 200ms ease-in-out;
+        }
+
+        .ks-title:hover {
+            transition: all 200ms ease-in-out;
+            color: #0af;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <p class="an-card">帖子 {{ post.title}} 编辑</p>
+    <div class="an-card">
+    {{ render_form(form) }}
+        {{ captcha('acp') }}
+
+    </div>
+{% endblock %}

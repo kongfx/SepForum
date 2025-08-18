@@ -1,0 +1,36 @@
+{% extends "admin_panel_base.html" %}
+{% block title %}帖子管理{% endblock %}
+{% block app %}
+    <h3>帖子管理</h3>
+	<table class="table table-hover">
+
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>标题</th>
+                <th>发布者</th>
+                <th>发布时间</th>
+                <th>状态</th>
+
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for post in posts %}
+                <tr>
+                    <th>{{ post.id }}</th>
+                    <td>{{ post.title }}</td>
+                    <td>{% if  post.show_author %}匿名；{% endif %}{% if post.show_author!=True or current_user.is_admin %}{{ show_user(post.author) }}{% endif %}</td>
+                    <td>{{ moment(post.timestamp).format('LLLL') }}</td>
+                    <td>
+                        {% if post.banned %}被删除；{% endif %}
+                        {% if post.locked %}被锁定；{% endif %}
+                        {% if not post.locked and not post.banned %}正常{% endif %}
+                    </td>
+                    <td><a href="{{ url_for('post_admin', post_id=post.id) }}">管理</a> <a href="{{ url_for("post",post_id=post.id) }}">查看</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ page_util(page,max_page) }}
+{% endblock %}

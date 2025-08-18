@@ -1,0 +1,30 @@
+{% extends "admin_panel_base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block title %}帖子管理 - {{ post.title }}{% endblock %}
+{% block headextra %}
+    <style>
+
+        #content {
+            background: #e6e6e6;
+
+        }
+        .an-card {
+            background: #fff;
+            {#border-radius: 15px;#}
+            box-shadow: 5px 5px 10px #aaa;
+            padding: 2em;
+            margin: 2em;
+        }
+
+
+    </style>
+{% endblock %}
+{% block app %}
+    <p class="an-card">Discuss {{ post.id }} 用户：{{ show_user(post.author) }}</p>
+    <article class="an-card">{{ post.content|safe }}</article>
+    <div class="an-card">
+    {{ render_form(form) }}
+        {{ captcha('acp') }}
+
+    </div>
+{% endblock %}

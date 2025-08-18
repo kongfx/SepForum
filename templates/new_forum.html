@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block title %}管理员面板 - 新板块{% endblock %}
+{% block content %}
+    {{ render_form(form) }}
+        {{ captcha('acp') }}
+
+{% endblock %}

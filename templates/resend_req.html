@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block title %}申请重审{% endblock %}
+{% block content %}
+    {{ render_form(form) }}
+    {{ captcha('acp') }}
+    <p>请注意：重审最多两次，两次仍未通过将被封禁账号。</p>
+{% endblock %}
