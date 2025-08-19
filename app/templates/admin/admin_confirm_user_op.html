@@ -11,15 +11,15 @@
     <pre>
 {{ user.ban_reason }}
     </pre>
-    <p><a class="btn btn-success" href="{{ url_for('admin_confirm_user_op_pass', user_id=user.id) }}">通过+下一个（P）</a> <a class="btn btn-danger" href="{{ url_for('admin_confirm_user_op_deny', user_id=user.id) }}">打回/封禁+下一个（[）</a></p>
+    <p><a class="btn btn-success" href="{{ url_for('.admin_confirm_user_op_pass', user_id=user.id) }}">通过+下一个（P）</a> <a class="btn btn-danger" href="{{ url_for('.admin_confirm_user_op_deny', user_id=user.id) }}">打回/封禁+下一个（[）</a></p>
     <script>
         (w=>{
             w.document.addEventListener('keyup',ev=>{
                 {#console.log(ev.key)#}
                 if(ev.key==='p')
-                    location.pathname = "{{ url_for('admin_confirm_user_op_pass', user_id=user.id) }}";
+                    location.pathname = "{{ url_for('.admin_confirm_user_op_pass', user_id=user.id) }}";
                 else if (ev.key==='[')
-                    location.pathname = "{{ url_for('admin_confirm_user_op_deny', user_id=user.id) }}";
+                    location.pathname = "{{ url_for('.admin_confirm_user_op_deny', user_id=user.id) }}";
 
             });
         })(window);

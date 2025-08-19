@@ -1,6 +1,7 @@
 import datetime
 import os
 
+from flask import g
 from sqlalchemy import Column, String, create_engine, Integer, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.orm import declarative_base
@@ -60,6 +61,8 @@ class User(Base, UserMixin):
     confirm_denied=Column(Boolean, default=False)
     experience = Column(Integer, default=0)
     points = Column(Integer, default=0)
+    register_time = Column(DateTime, default=datetime.datetime.utcnow)
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if self.username == 'TheKo114':

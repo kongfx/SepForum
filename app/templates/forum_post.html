@@ -43,7 +43,7 @@
         <p class="an-card">共找到 {{ post_count }} 个帖子。</p>
 
     {% for post in posts %}
-        <a class="ks-title" href="{{ url_for('post', post_id=post.id) }}">
+        <a class="ks-title" href="{{ url_for('.post', post_id=post.id) }}">
             <div class="an-card">
                 <div class="ks-big">{{ post.title }}</div>
             {%  if  post.show_author!=True %}

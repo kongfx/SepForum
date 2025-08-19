@@ -2,7 +2,7 @@
 
 {% macro show_user(user) %}
     {% if user.is_authenticated %}
-        <a class="username_text" href="{{ url_for("user",uid=user.id) }}">
+        <a class="username_text" href="{{ url_for("main.user",user_id=user.id) }}">
             {% if user.banned %}
                 <span class="user-banned">{{ user.username }}</span>
                 {% set color="banned" %}
@@ -173,11 +173,11 @@
     </nav>
 {%- endmacro %}
 {% macro captcha(id) %}
-    <img src="{{ url_for('gen_captcha') }}?t={{ timestamp }}" alt="CAPTCHA" id="{{ id }}">
+    <img src="{{ url_for('main.gen_captcha') }}?t={{ timestamp }}" alt="CAPTCHA" id="{{ id }}">
     <script>(d => {
         const _c = d.getElementById("{{id}}");
         _c.addEventListener('click', _ => {
-            _c.src = "{{url_for('gen_captcha')}}?t=" + new Date().getTime()
+            _c.src = "{{url_for('main.gen_captcha')}}?t=" + new Date().getTime()
         })
     })(document);</script>
 {% endmacro %}
@@ -294,11 +294,11 @@
         {#     padding-bottom: 0.1em;#}
         #sidebar > ul > li {
             position: relative;
-            word-break:keep-all;
-            margin-bottom:1em;
+            word-break: keep-all;
+            margin-bottom: 1em;
         }
 
-        #content {
+        #content_main {
             flex: 1;
 
         }
@@ -308,17 +308,20 @@
         }
 
         #topbar {
-            background: #fafafa;
+            background: #fafafae0;
+            backdrop-filter: blur(5px);
+
             border-bottom: 1px solid #ddd;
             height: 50px;
             position: sticky;
             padding: 2px;
             top: 0;
+            z-index: 99999;
         }
 
         @font-face {
             font-family: "JinShanYunJiShuTi";
-            src: url("/fonts/jsyjst.ttf");
+            src: url("/static/fonts/jsyjst.ttf");
         }
 
         #logo {
@@ -356,10 +359,492 @@
             color: #111;
 
         }
+
+        {#.admonition {#}
+        {#    border-radius: 10px;#}
+        {#    overflow: hidden;#}
+        {#    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);#}
+        {#    transition: transform 0.3s ease, box-shadow 0.3s ease;#}
+        {#    border-left: 4px solid;#}
+        {#    margin:1rem;#}
+        {#}#}
+        {##}
+        {#.admonition:hover {#}
+        {#    transform: translateY(-5px);#}
+        {#    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);#}
+        {#}#}
+        {##}
+        {#.admonition-title {#}
+        {#    font-weight: 600;#}
+        {#    padding: 0.5rem 0.5rem 0.5rem 3.5rem;#}
+        {#    position: relative;#}
+        {#    display: flex;#}
+        {#    align-items: center;#}
+        {#    font-size: 1.1rem;#}
+        {#    margin-bottom: 0rem;#}
+        {#}#}
+        {##}
+        {#.admonition-title::before {#}
+        {#    content: "";#}
+        {#    position: absolute;#}
+        {#    left: 1.2rem;#}
+        {#    width: 24px;#}
+        {#    height: 24px;#}
+        {#    display: flex;#}
+        {#    align-items: center;#}
+        {#    justify-content: center;#}
+        {#    border-radius: 50%;#}
+        {#    font-size: 14px;#}
+        {#    font-weight: 900;#}
+        {#}#}
+        {##}
+        {#.admonition p:not(.admonition-title) {#}
+        {#    padding: 1rem 1.5rem 1.5rem 1.5rem;#}
+        {#    line-height: 1.6;#}
+        {#    color: #444;#}
+        {#    background: rgba(255, 255, 255, 0.7);#}
+        {#    margin: 0;#}
+        {#}#}
+        {##}
+        {#/* 警告样式 */#}
+        {#.admonition.warning {#}
+        {#    border-color: #ff9800;#}
+        {#    background: linear-gradient(135deg, rgba(255, 243, 224, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);#}
+        {#}#}
+        {##}
+        {#.admonition.warning .admonition-title {#}
+        {#    color: #e65100;#}
+        {#    background: rgba(255, 243, 224, 0.4);#}
+        {#}#}
+        {##}
+        {#.admonition.warning .admonition-title::before {#}
+        {#    content: "⚠";#}
+        {#    background: rgba(255, 152, 0, 0.15);#}
+        {#    color: #ff9800;#}
+        {#    font-size: 16px;#}
+        {#}#}
+        {##}
+        {#/* 错误样式 */#}
+        {#.admonition.error {#}
+        {#    border-color: #f44336;#}
+        {#    background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 241, 0.9) 100%);#}
+        {#}#}
+        {##}
+        {#.admonition.error .admonition-title {#}
+        {#    color: #c62828;#}
+        {#    background: rgba(255, 235, 238, 0.4);#}
+        {#}#}
+        {##}
+        {#.admonition.error .admonition-title::before {#}
+        {#    content: "✖";#}
+        {#    background: rgba(244, 67, 54, 0.15);#}
+        {#    color: #f44336;#}
+        {#}#}
+        {##}
+        {#/* 信息样式 */#}
+        {#.admonition.info {#}
+        {#    border-color: #2196f3;#}
+        {#    background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.9) 100%);#}
+        {#}#}
+        {##}
+        {#.admonition.info .admonition-title {#}
+        {#    color: #0d47a1;#}
+        {#    background: rgba(227, 242, 253, 0.4);#}
+        {#}#}
+        {##}
+        {#.admonition.info .admonition-title::before {#}
+        {#    content: "ℹ";#}
+        {#    background: rgba(33, 150, 243, 0.15);#}
+        {#    color: #2196f3;#}
+        {#    font-weight: 900;#}
+        {#}#}
+        {##}
+        {#/* 笔记样式 */#}
+        {#.admonition.note {#}
+        {#    border-color: #9c27b0;#}
+        {#    background: linear-gradient(135deg, rgba(243, 229, 245, 0.9) 0%, rgba(248, 237, 255, 0.9) 100%);#}
+        {#}#}
+        {##}
+        {#.admonition.note .admonition-title {#}
+        {#    color: #6a1b9a;#}
+        {#    background: rgba(243, 229, 245, 0.4);#}
+        {#}#}
+        {##}
+        {#.admonition.note .admonition-title::before {#}
+        {#    content: "✎";#}
+        {#    background: rgba(156, 39, 176, 0.15);#}
+        {#    color: #9c27b0;#}
+        {#}#}
+        {##}
+        {#/* 成功样式 */#}
+        {#.admonition.success {#}
+        {#    border-color: #4caf50;#}
+        {#    background: linear-gradient(135deg, rgba(232, 245, 233, 0.9) 0%, rgba(240, 255, 241, 0.9) 100%);#}
+        {# } #}
+        {##}
+        {#.admonition.success .admonition-title {#}
+        {#    color: #2e7d32;#}
+        {#    background: rgba(232, 245, 233, 0.4);#}
+        {#}#}
+        {##}
+        {#.admonition.success .admonition-title::before {#}
+        {#    content: "✓";#}
+        {#    background: rgba(76, 175, 80, 0.15);#}
+        {#    color: #4caf50;#}
+        {#}#}
+
+        .admonition {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 4px solid;
+            margin: 1rem;
+        }
+
+        .admonition:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .admonition-title {
+            font-weight: 600;
+            padding: 0.5rem 0.5rem 0.5rem 3.5rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+            margin-bottom: 0rem;
+        }
+
+        .admonition-title::before {
+            content: "";
+            position: absolute;
+            left: 1.2rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .admonition p:not(.admonition-title) {
+            padding: 1rem 1.5rem 1.5rem 1.5rem;
+            line-height: 1.6;
+            color: #444;
+            background: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+
+        .admonition.attention {
+            border-color: #ff7043;
+            background: linear-gradient(135deg, rgba(255, 243, 224, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);
+        }
+
+        .admonition.attention .admonition-title {
+            color: #bf360c;
+            background: rgba(255, 243, 224, 0.5);
+        }
+
+        .admonition.attention .admonition-title::before {
+            content: "⚠";
+            background: rgba(255, 112, 67, 0.15);
+            color: #ff7043;
+        }
+
+        .admonition.caution {
+            border-color: #ffc107;
+            background: linear-gradient(135deg, rgba(255, 249, 196, 0.9) 0%, rgba(255, 253, 231, 0.9) 100%);
+        }
+
+        .admonition.caution .admonition-title {
+            color: #8d6e00;
+            background: rgba(255, 249, 196, 0.5);
+        }
+
+        .admonition.caution .admonition-title::before {
+            content: "⚠";
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .admonition.danger {
+            border-color: #f44336;
+            background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 241, 0.9) 100%);
+        }
+
+        .admonition.danger .admonition-title {
+            color: #b71c1c;
+            background: rgba(255, 235, 238, 0.5);
+        }
+
+        .admonition.danger .admonition-title::before {
+            content: "☠";
+            background: rgba(244, 67, 54, 0.15);
+            color: #f44336;
+        }
+
+        .admonition.error {
+            border-color: #e53935;
+            background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 241, 0.9) 100%);
+        }
+
+        .admonition.error .admonition-title {
+            color: #c62828;
+            background: rgba(255, 235, 238, 0.5);
+        }
+
+        .admonition.error .admonition-title::before {
+            content: "✖";
+            background: rgba(229, 57, 53, 0.15);
+            color: #e53935;
+        }
+
+        .admonition.hint {
+            border-color: #4caf50;
+            background: linear-gradient(135deg, rgba(232, 245, 233, 0.9) 0%, rgba(240, 255, 241, 0.9) 100%);
+        }
+
+        .admonition.hint .admonition-title {
+            color: #2e7d32;
+            background: rgba(232, 245, 233, 0.5);
+        }
+
+        .admonition.hint .admonition-title::before {
+            content: "💡";
+            background: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+        }
+
+        .admonition.important {
+            border-color: #9c27b0;
+            background: linear-gradient(135deg, rgba(243, 229, 245, 0.9) 0%, rgba(248, 237, 255, 0.9) 100%);
+        }
+
+        .admonition.important .admonition-title {
+            color: #6a1b9a;
+            background: rgba(243, 229, 245, 0.5);
+        }
+
+        .admonition.important .admonition-title::before {
+            content: "❗";
+            background: rgba(156, 39, 176, 0.15);
+            color: #9c27b0;
+        }
+
+        .admonition.note {
+            border-color: #2196f3;
+            background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.9) 100%);
+        }
+
+        .admonition.note .admonition-title {
+            color: #0d47a1;
+            background: rgba(227, 242, 253, 0.5);
+        }
+
+        .admonition.note .admonition-title::before {
+            content: "ℹ";
+            background: rgba(33, 150, 243, 0.15);
+            color: #2196f3;
+            font-weight: 900;
+        }
+
+        .admonition.tip {
+            border-color: #00bcd4;
+            background: linear-gradient(135deg, rgba(224, 247, 250, 0.9) 0%, rgba(240, 255, 255, 0.9) 100%);
+        }
+
+        .admonition.tip .admonition-title {
+            color: #00838f;
+            background: rgba(224, 247, 250, 0.5);
+        }
+
+        .admonition.tip .admonition-title::before {
+            content: "💡";
+            background: rgba(0, 188, 212, 0.15);
+            color: #00bcd4;
+        }
+
+        .admonition.warning {
+            border-color: #ff9800;
+            background: linear-gradient(135deg, rgba(255, 243, 224, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);
+        }
+
+        .admonition.warning .admonition-title {
+            color: #e65100;
+            background: rgba(255, 243, 224, 0.5);
+        }
+
+        .admonition.warning .admonition-title::before {
+            content: "⚠";
+            background: rgba(255, 152, 0, 0.15);
+            color: #ff9800;
+            font-size: 18px;
+        }
+        .toc {
+            background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.95) 100%);
+            border-radius: 12px;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            margin:1rem;
+
+        }
+
+        .toc:hover {
+            box-shadow: 0 12px 35px rgba(52, 152, 219, 0.25);
+            transform: translateY(-3px);
+        }
+
+        .toc summary {
+            padding: 1.2rem 1.5rem;
+            background: rgba(52, 152, 219, 0.1);
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 1.25rem;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(52, 152, 219, 0.2);
+            transition: background 0.3s ease;
+        }
+
+        .toc summary:hover {
+            background: rgba(52, 152, 219, 0.15);
+        }
+
+        .toc summary::marker {
+            color: #3498db;
+            font-size: 1.1rem;
+        }
+
+        .toc summary::before {
+            content: "📑";
+            margin-right: 12px;
+            font-size: 1.4rem;
+            transition: transform 0.3s ease;
+        }
+
+        .toc[open] summary::before {
+            content: "📖";
+        }
+
+        .toc summary::-webkit-details-marker {
+            color: #3498db;
+            font-size: 1.1rem;
+        }
+
+        .toc ul {
+            list-style-type: none; /* 去除默认的点 */
+            padding: 1.2rem 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .toc ul ul {
+            padding-left: 1.8rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0;
+        }
+
+        .toc li {
+            margin-bottom: 0.7rem;
+            position: relative;
+            transition: all 0.3s ease;
+            padding-left: 1.5rem; /* 为层级指示器留出空间 */
+        }
+
+        .toc li:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 层级指示器 - 替代点的方案 */
+        {#.toc li::before {#}
+        {#    content: "";#}
+        {#    position: absolute;#}
+        {#    left: 0;#}
+        {#    top: 50%;#}
+        {#    transform: translateY(-50%);#}
+        {#    width: 8px;#}
+        {#    height: 8px;#}
+        {#    border-radius: 2px;#}
+        {#    background: #3498db;#}
+        {#    opacity: 0.7;#}
+        {#    transition: all 0.3s ease;#}
+        {#}#}
+
+        {#.toc > ul > li::before {#}
+        {#    width: 10px;#}
+        {#    height: 10px;#}
+        {#    background: #2c3e50;#}
+        {#}#}
+
+        .toc a {
+            text-decoration: none;
+            color: #2c3e50;
+            display: block;
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .toc a:hover {
+            color: #2980b9;
+            background: rgba(52, 152, 219, 0.1);
+            transform: translateX(5px);
+        }
+
+        .toc a:hover::before {
+            width: 100%;
+        }
+
+        /* 不同层级样式 */
+        .toc > ul > li > a {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2c3e50;
+            position: relative;
+            padding-left: 0;
+        }
+
+        .toc > ul > li > a::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background: #3498db;
+            transition: width 0.3s ease;
+        }
+
+        .toc ul ul > li > a {
+            font-size: 1rem;
+            color: #34495e;
+        }
+
+        .toc ul ul ul > li > a {
+            font-size: 0.95rem;
+            color: #5d6d7e;
+        }
+
+        .toc ul ul ul ul > li > a {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="/bootstrap.css">
-    <script src="/bootstrap.js"></script>
+    <link rel="stylesheet" href="/static/bootstrap.css">
+    <script src="/static/bootstrap.js"></script>
     <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="icon" href="/favicon.ico"/>
     <link rel="shortcut-icon" href="/favicon.ico"/>
@@ -368,20 +853,20 @@
     {% block headextra %}
 
     {% endblock %}
-<link rel="stylesheet" href="/katex.min.css"
+    <link rel="stylesheet" href="/static/katex.min.css"
           data-s384="sha384-zh0CIslj+VczCZtlzBcjt5ppRcsAmDnRem7ESsYwWwg3m/OaJ2l4x7YBZl9Kxxib" crossorigin="anonymous">
-    <script defer src="/katex.min.js"
+    <script defer src="/static/katex.min.js"
             data-s384="sha384-Rma6DA2IPUwhNxmrB/7S3Tno0YY7sFu9WSYMCuulLhIqYSGZ2gKCJWIqhBWqMQfh"
             crossorigin="anonymous"></script>
-    <script defer src="/katexar.min.js"
+    <script defer src="/static/katexar.min.js"
             data-s384="sha384-hCXGrW6PitJEwbkoStFjeJxv+fSOOQKOPbJxSfM6G5sWZjAyWhXiTIIAmQqnlLlh"
             crossorigin="anonymous"></script>
-    <script defer src="/mathtex-script-type.min.js"></script>
-    <script defer src="/mhchem.min.js"></script>
-    <script defer src="/copy-tex.min.js"></script>
-    <script defer src="/render-a11y-string.min.js"></script>
+    <script defer src="/static/mathtex-script-type.min.js"></script>
+    <script defer src="/static/mhchem.min.js"></script>
+    <script defer src="/static/copy-tex.min.js"></script>
+    <script defer src="/static/render-a11y-string.min.js"></script>
     <meta charset="utf-8">
-    <script src="/swal.js"></script>
+    <script src="/static/swal.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             renderMathInElement(document.body, {
@@ -403,27 +888,31 @@
 <div id="wrapper">
     <div id="sidebar">
         <ul>
-            <li><a href="{{ url_for("admin") }}"><i class="bi bi-pie-chart-fill"></i><span>概览</span></a></li>
+            <li><a href="{{ url_for(".admin_backstage") }}"><i class="bi bi-pie-chart-fill"></i><span>概览</span></a>
+            </li>
             {#        <li>BBB</li>#}
             {% if current_user.is_admin %}
-                <li><a href="{{ url_for("admin_all_user") }}"><i class="bi bi-people-fill"></i><span>用户管理</span></a>
+                <li><a href="{{ url_for(".all_user") }}"><i class="bi bi-people-fill"></i><span>用户管理</span></a>
                 </li>
-                <li><a href="{{ url_for("admin_confirm_user") }}"><i class="bi bi-file-earmark-check"></i><span>用户审核</span></a>
+                <li><a href="{{ url_for(".admin_confirm_user") }}"><i
+                    class="bi bi-file-earmark-check"></i><span>用户审核</span></a>
             {% endif %}
             {% if current_user.has_perm(Permission.MODERATE_DISCUSSION) %}
-                <li><a href="{{ url_for("admin_all_post") }}"><i class="bi bi-pencil-square"></i><span>帖子管理</span></a>
+                <li><a href="{{ url_for(".all_post") }}"><i class="bi bi-pencil-square"></i><span>帖子管理</span></a>
                 </li>
-                <li><a href="{{ url_for("admin") }}"><i class="bi bi-reply-fill"></i><span>回帖管理</span></a></li>
+                <li><a href="{{ url_for(".admin_backstage") }}"><i
+                        class="bi bi-reply-fill"></i><span>回帖管理</span></a></li>
             {% endif %}
         </ul>
     </div>
-    <div id="content">
+    <div id="content_main">
         <div id="topbar">
             <button id="collapse"><i class="bi bi-list"></i></button>
             <a id="logo" href="/">论坛</a>
             <div id="kr"><a class="lnk"
-                            href="{{ url_for("user", uid=current_user.id) }}">{{ current_user.username }}</a> | <a
-                    class="lnk" href="/">退出后台</a></div>
+                            href="{{ url_for("main.user", user_id=current_user.id) }}">{{ current_user.username }}</a> |
+                <a
+                        class="lnk" href="/">退出后台</a></div>
         </div>
         <div id="app">
             <div style="margin:1em">

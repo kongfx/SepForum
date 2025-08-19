@@ -28,7 +28,7 @@
                         {% if user.has_perm(Permission.BACKSTAGE_ENTRANCE) %}进入后台；{% endif %}
                         {% if user.has_perm(Permission.ADMINISTRATOR) %}超级管理；{% endif %}
                     </td>
-                    <td><a href="{{ url_for('user_admin', user_id=user.id) }}">管理</a></td>
+                    <td><a href="{{ url_for('.user_admin', user_id=user.id) }}">管理</a></td>
                 </tr>
             {% endfor %}
         </tbody>

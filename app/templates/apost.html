@@ -31,22 +31,22 @@
         <p>创建时间：{{ moment(post.timestamp).format('LLLL') }}</p>
         <p>板块：{{ post.forum.name }}</p>
         {% if canban %}
-            <a class="btn btn-danger" href="{{ url_for("ban_post", post_id=post.id) }}">删除帖子</a>
-            <a class="btn btn-primary" href="{{ url_for("edit_post", post_id=post.id) }}">编辑帖子</a>
+{#            <a class="btn btn-danger" href="{{ url_for("ban_post", post_id=post.id) }}">删除帖子</a>#}
+{#            <a class="btn btn-primary" href="{{ url_for("edit_post", post_id=post.id) }}">编辑帖子</a>#}
 
 
         {% endif %}
         {% if post.banned and current_user.is_admin %}
-            <a class="btn btn-danger" href="{{ url_for("unban_post", post_id=post.id) }}">恢复帖子（仅管理员）</a>
-            <i>Banned post.</i>
+{#            <a class="btn btn-danger" href="{{ url_for("unban_post", post_id=post.id) }}">恢复帖子（仅管理员）</a>#}
+{#            <i>Banned post.</i>#}
         {% endif %}
         {% if post.locked %}
             <p>锁定的帖子。</p>
         {% endif %}
         {% if show_banned_reply %}
-            <a class="btn btn-danger" href="{{ url_for("post_admin", post_id=post.id) }}">帖子管理</a>
-            <a class="btn btn-danger" href="{{ url_for("lock_post", post_id=post.id) }}">锁定帖子（仅管理员）</a>
-            <a class="btn btn-success" href="{{ url_for("unlock_post", post_id=post.id) }}">解锁帖子（仅管理员）</a>
+            <a class="btn btn-danger" href="{{ url_for("admin.post_admin", post_id=post.id) }}">帖子管理</a>
+{#            <a class="btn btn-danger" href="{{ url_for("lock_post", post_id=post.id) }}">锁定帖子（仅管理员）</a>#}
+{#            <a class="btn btn-success" href="{{ url_for("unlock_post", post_id=post.id) }}">解锁帖子（仅管理员）</a>#}
 
         {% endif %}
     </div>
@@ -63,15 +63,17 @@
                 <div>{{ show_user(reply.user) }} 在 {{ moment(reply.timestamp).format('LLLL') }}
                     <div style="float:right">
 
-                    <a href="{{ url_for('reply', reply_id=reply.id) }}" style="color: #aaa;text-decoration: none">链接</a> {% if reply.banned %}
-                            被删除的回复<a href="{{ url_for('unban_reply', reply_id=reply.id) }}"
-                                           style="color: #aaa;text-decoration: none">恢复</a>
-                        {% else %}
-                            {% if show_banned_reply or reply.id==current_user.id %}
-                                <a href="{{ url_for('ban_reply', reply_id=reply.id) }}"
-                                   style="color: #aaa;text-decoration: none">删除</a>
-                            {% endif %}
-                        {% endif %} </div>
+                    <a href="{{ url_for('.reply', reply_id=reply.id) }}" style="color: #aaa;text-decoration: none">链接</a>
+{#                        {% if reply.banned %}#}
+{#                            被删除的回复<a href="{{ url_for('unban_reply', reply_id=reply.id) }}"#}
+{#                                           style="color: #aaa;text-decoration: none">恢复</a>#}
+{#                        {% else %}#}
+{#                            {% if show_banned_reply or reply.id==current_user.id %}#}
+{#                                <a href="{{ url_for('ban_reply', reply_id=reply.id) }}"#}
+{#                                   style="color: #aaa;text-decoration: none">删除</a>#}
+{#                            {% endif %}#}
+{#                        {% endif %} #}
+                    </div>
                 </div>
                 <div>{{ reply.content|safe }}</div>
             </div>

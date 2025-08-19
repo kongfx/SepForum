@@ -43,7 +43,7 @@
     </div>
     {% for frm in forums %}
         <div class="an-card">
-            <a class="ks-title" href="{{ url_for('forum', forum_id=frm.id) }}">
+            <a class="ks-title" href="{{ url_for('main.forum', forum_id=frm.id) }}">
                 <div class="ks-big">{{ frm.name }}</div>
                 <div>{{ frm.description }}</div>
             </a>

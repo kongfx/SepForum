@@ -1,8 +1,8 @@
 from flask import flash, render_template, g, url_for, request, redirect
 from flask_login import login_user, login_required, logout_user, current_user
 
-from captcha_lib import verify_captcha
-from db import User
+from ..captcha_lib import verify_captcha
+from ..db import User
 from . import auth
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm, ReSendRequestForm
 
@@ -24,7 +24,7 @@ def login():
         if login_user(user, remember=form.remember_me.data):
             next = request.args.get('next')
             flash(f'登录成功。', 'info')
-            return redirect(next or url_for('main_page'))
+            return redirect(next or url_for('main.index'))
         flash(f'未知错误。', 'error')
 
     return render_template('auth/login.html', form=form)
@@ -43,7 +43,7 @@ def register():
             flash(f'注册成功。请登录。', 'success')
             g.dbs.add(user)
             g.dbs.commit()
-            return redirect(url_for('login'))
+            return redirect(url_for('.login'))
         flash(f'用户名重复。', 'error')
         return render_template('auth/register.html', form=form)
     return render_template('auth/register.html', form=form)
@@ -54,7 +54,7 @@ def register():
 def logout():
     logout_user()
     flash('你已被登出。', 'info')
-    return redirect(url_for('main_page'))
+    return redirect(url_for('main.index'))
 
 @auth.route('/change_password/', methods=['GET', 'POST'])
 @login_required
@@ -76,7 +76,7 @@ def change_password():
 def unconfirmed():
     if current_user.confirmed:
         flash('你的账号已通过审核，欢迎！')
-        return redirect(url_for('main_page'))
+        return redirect(url_for('main.index'))
     return render_template('auth/unconfirmed.html')
 
 @auth.route('/unconfirmed/re-send/', methods=['GET', 'POST'])
@@ -86,11 +86,14 @@ def re_send_req():
         return redirect(url_for('main_page'))
     form = ReSendRequestForm()
     if form.validate_on_submit():
+        if not verify_captcha(form.captcha.data):
+            flash('验证码错误。')
+            return render_template('auth/resend_req.html', form=form)
         current_user.reg_reason = '【用户请求重审】' + form.reg_reason.data
         current_user.confirm_denied = False
         g.dbs.add(current_user._get_current_object())
         g.dbs.commit()
         flash('重审申请成功！', 'success')
-        return redirect(url_for('unconfirmed'))
+        return redirect(url_for('.unconfirmed'))
     return render_template('auth/resend_req.html', form=form)
 

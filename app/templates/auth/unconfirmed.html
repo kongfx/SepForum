@@ -6,7 +6,7 @@
     <pre>{{ current_user.reg_reason }}</pre>
     {% if current_user.confirm_denied %}
         <p>你的申请已被打回。打回理由：{{ current_user.ban_reason }}。</p>
-        <p><a class="btn btn-primary" href="{{ url_for('re_send_req') }}">申请重新审核</a></p>
+        <p><a class="btn btn-primary" href="{{ url_for('.re_send_req') }}">申请重新审核</a></p>
     {% else %}
         <p>等待审核中。</p>
     {% endif %}

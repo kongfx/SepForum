@@ -11,17 +11,17 @@
     {% with url_params = {} -%}
         {%- do url_params.update(request.view_args if not endpoint else {}),
             url_params.update(request.args if not endpoint else {}) -%}
-            {% for url_parameter, db_field in url_tuples %}
-                {% if db_field.startswith(':') and '.' in db_field %}
-                    {%- set db_field = db_field[1:].split('.') -%}
-                    {%- do url_params.update({url_parameter: record[db_field[0]][db_field[1]]}) -%}
-                {% elif db_field.startswith(':') %}
-                    {%- set db_field = db_field[1:] -%}
-                    {%- do url_params.update({url_parameter: record[db_field]}) -%}
-                {% else %}
-                    {%- do url_params.update({url_parameter: db_field}) -%}
-                {% endif %}
-            {% endfor %}
+        {% for url_parameter, db_field in url_tuples %}
+            {% if db_field.startswith(':') and '.' in db_field %}
+                {%- set db_field = db_field[1:].split('.') -%}
+                {%- do url_params.update({url_parameter: record[db_field[0]][db_field[1]]}) -%}
+            {% elif db_field.startswith(':') %}
+                {%- set db_field = db_field[1:] -%}
+                {%- do url_params.update({url_parameter: record[db_field]}) -%}
+            {% else %}
+                {%- do url_params.update({url_parameter: db_field}) -%}
+            {% endif %}
+        {% endfor %}
         {{ arg_url_for(endpoint, url_params) }}
     {%- endwith %}
 {%- endmacro %}
@@ -47,125 +47,126 @@
                       delete_url=None,
                       new_url=None,
                       action_pk_placeholder=':id') %}
-{% if not titles %}
-    {% set titles = get_table_titles(data, primary_key, primary_key_title) %}
-{% endif %}
-{% if responsive %}
-    <div class="{{ responsive_class }}">
-{% endif %}
+    {% if not titles %}
+        {% set titles = get_table_titles(data, primary_key, primary_key_title) %}
+    {% endif %}
+    {% if responsive %}
+        <div class="{{ responsive_class }}">
+    {% endif %}
 <table class="table{% if table_classes %}{{ ' ' + table_classes }}{% endif %}">
     {% if caption %}
-    <caption>{{ caption }}</caption>
+        <caption>{{ caption }}</caption>
     {% endif %}
     <thead{% if header_classes %} class="{{ header_classes }}"{% endif %}>
     <tr>
-    {% for title in titles %}
-        <th scope="col">{{ title[1] }}</th>
-    {% endfor %}
-    {% if show_actions %}
-        <th scope="col">{{ actions_title }}
-        {% if new_url %}
-            <a class="action-icon text-decoration-none"
-                {% if new_url.startswith('/') %}
-                href="{{ new_url }}"
-                {% else %}
-                href="{{ url_for(new_url) }}"
+        {% for title in titles %}
+            <th scope="col">{{ title[1] }}</th>
+        {% endfor %}
+        {% if show_actions %}
+            <th scope="col">{{ actions_title }}
+                {% if new_url %}
+                    <a class="action-icon text-decoration-none"
+                            {% if new_url.startswith('/') %}
+                       href="{{ new_url }}"
+                            {% else %}
+                       href="{{ url_for(new_url) }}"
+                            {% endif %}
+                       title="{{ config['BOOTSTRAP_TABLE_NEW_TITLE'] }}">
+                        {{ render_icon('plus-circle-fill') }}
+                    </a>
                 {% endif %}
-                title="{{ config['BOOTSTRAP_TABLE_NEW_TITLE'] }}">
-                {{ render_icon('plus-circle-fill') }}
-            </a>
+            </th>
         {% endif %}
-        </th>
-    {% endif %}
     </tr>
     </thead>
     <tbody{% if body_classes %} class="{{ body_classes }}"{% endif %}>
     {% for row in data %}
-    <tr>
-        {% for title in titles %}
-        {% set key = title[0] %}
-        {% set value = row[key] %}
-        {%- if key == primary_key -%}
-            <th scope="row">
-        {%- else -%}
-            <td>
-        {%- endif -%}
-        {%- if value is string -%}
-            {%- if safe_columns and key in safe_columns -%}
-                {{ value|safe }}
-            {%- else -%}
-                {%- if userize_columns and key in userize_columns -%}
-                    {{ render_user(value)}}
-                {%- else -%}
-                    {{ value }}
+        <tr>
+            {% for title in titles %}
+                {% set key = title[0] %}
+                {% set value = row[key] %}
+                {%- if key == primary_key -%}
+                    <th scope="row">
+                        {%- else -%}
+                    <td>
                 {%- endif -%}
+            {%- if value is string -%}
+                {%- if safe_columns and key in safe_columns -%}
+                    {{ value|safe }}
+                {%- else -%}
+                    {%- if userize_columns and key in userize_columns -%}
+                        {{ render_user(value) }}
+                    {%- else -%}
+                        {{ value }}
+                    {%- endif -%}
+                {%- endif -%}
+            {%- elif value.__class__.__base__.__name__ == 'Enum' -%}
+                {{ value.value }}
+            {%- else -%}
+                {{ value }}
             {%- endif -%}
-        {%- elif value.__class__.__base__.__name__ == 'Enum' -%}
-            {{ value.value }}
-        {%- else -%}
-            {{ value }}
-        {%- endif -%}
-        {%- if key == primary_key -%}
-            </th>
-        {%- else -%}
-            </td>
-        {%- endif -%}
-        {% endfor %}
-        {% if show_actions %}
-        <td>
-            {% if custom_actions %}
-            {% for (action_name, action_icon, action_url) in custom_actions %}
-                <a class="action-icon text-decoration-none"
-                   {% if action_url is string %}
-                    href="{{ action_url }}"
-                   {% else %}
-                    href="{{ build_url(row, action_url[0], action_url[1], model, primary_key) | trim }}"
-                   {% endif %}
-                    title="{{ action_name }}">{{ render_icon(action_icon) }}</a>
+            {%- if key == primary_key -%}
+                </th>
+            {%- else -%}
+                </td>
+            {%- endif -%}
             {% endfor %}
+            {% if show_actions %}
+                <td>
+                    {% if custom_actions %}
+                        {% for (action_name, action_icon, action_url) in custom_actions %}
+                            <a class="action-icon text-decoration-none"
+                                    {% if action_url is string %}
+                               href="{{ action_url }}"
+                                    {% else %}
+                               href="{{ build_url(row, action_url[0], action_url[1], model, primary_key) | trim }}"
+                                    {% endif %}
+                               title="{{ action_name }}">{{ render_icon(action_icon) }}</a>
+                        {% endfor %}
+                    {% endif %}
+                    {% if view_url %}
+                        <a class="action-icon text-decoration-none"
+                                {% if view_url is string %}
+                           href="{{ view_url }}"
+                                {% else %}
+                           href="{{ build_url(row, view_url[0], view_url[1], model, primary_key) | trim }}"
+                                {% endif %}
+                           title="{{ config['BOOTSTRAP_TABLE_VIEW_TITLE'] }}">
+                            {{ render_icon('eye-fill') }}
+                        </a>
+                    {% endif %}
+                    {% if edit_url -%}
+                        <a class="action-icon text-decoration-none"
+                                {% if edit_url is string %}
+                           href="{{ edit_url }}"
+                                {% else %}
+                           href="{{ build_url(row, edit_url[0], edit_url[1], model, primary_key) | trim }}"
+                                {% endif %}
+                           title="{{ config['BOOTSTRAP_TABLE_EDIT_TITLE'] }}">
+                            {{ render_icon('pencil-fill') }}
+                        </a>
+                    {%- endif %}
+                    {% if delete_url %}
+                        <form class="d-inline"
+                                {% if delete_url is string %}
+                              action="{{ delete_url }}"
+                                {% else %}
+                              action="{{ build_url(row, delete_url[0], delete_url[1], model, primary_key) | trim }}"
+                                {% endif %}
+                              method="post">
+                            {% if csrf_token is undefined %}
+                                {{ raise('You have to enable the CSRFProtect extension from Flask-WTF to use delete_url, see the docs for more details (https://bootstrap-flask.readthedocs.io/en/stable/macros.html#render-table).') }}
+                            {% endif %}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-link p-0 border-0 align-baseline"
+                                    title="{{ config['BOOTSTRAP_TABLE_DELETE_TITLE'] }}">
+                                {{ render_icon('trash-fill') }}
+                            </button>
+                        </form>
+                    {% endif %}
+                </td>
             {% endif %}
-            {% if view_url %}
-                <a class="action-icon text-decoration-none"
-                   {% if view_url is string %}
-                    href="{{ view_url }}"
-                   {% else %}
-                    href="{{ build_url(row, view_url[0], view_url[1], model, primary_key) | trim }}"
-                   {% endif %}
-                    title="{{ config['BOOTSTRAP_TABLE_VIEW_TITLE'] }}">
-                    {{ render_icon('eye-fill') }}
-                </a>
-            {% endif %}
-            {% if edit_url -%}
-                <a class="action-icon text-decoration-none"
-                   {% if edit_url is string %}
-                    href="{{ edit_url }}"
-                   {% else %}
-                    href="{{ build_url(row, edit_url[0], edit_url[1], model, primary_key) | trim }}"
-                   {% endif %}
-                    title="{{ config['BOOTSTRAP_TABLE_EDIT_TITLE'] }}">
-                    {{ render_icon('pencil-fill') }}
-                </a>
-            {%- endif %}
-            {% if delete_url %}
-            <form class="d-inline"
-                  {% if delete_url is string %}
-                   action="{{ delete_url }}"
-                  {% else %}
-                   action="{{ build_url(row, delete_url[0], delete_url[1], model, primary_key) | trim }}"
-                  {% endif %}
-                   method="post">
-                  {% if csrf_token is undefined %}
-                  {{ raise('You have to enable the CSRFProtect extension from Flask-WTF to use delete_url, see the docs for more details (https://bootstrap-flask.readthedocs.io/en/stable/macros.html#render-table).') }}
-                  {% endif %}
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <button type="submit" class="btn btn-link p-0 border-0 align-baseline" title="{{ config['BOOTSTRAP_TABLE_DELETE_TITLE'] }}">
-                    {{ render_icon('trash-fill') }}
-                </button>
-            </form>
-            {% endif %}
-        </td>
-        {% endif %}
-    </tr>
+        </tr>
     {% endfor %}
     </tbody>
 </table>
@@ -175,35 +176,35 @@
 {% endmacro %}
 {% macro show_user(user) %}
     {% if user.is_authenticated %}
-        <a class="username_text" href="{{ url_for("user",uid=user.id) }}">
-        {% if user.banned %}
-            <span class="user-banned">{{ user.username }}</span>
-            {% set color="banned" %}
-        {% elif user.is_ladmin %}
-            <span class="user-purple">{{ user.username }}</span>
-            {% set color="purple" %}
-
-        {% elif user.perm//16==1 %}
-            <span class="user-red">{{ user.username }}</span>
-            {% set color="red" %}
-
-        {% else %}
-            <span class="user-blue">{{ user.username }}</span>
-            {% set color="blue" %}
-
-        {% endif %}
-        {% if user.verified %}
-            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="#3498db"
-                 style="margin-bottom: 3px;">
-                <path d="M16 8C16 6.84375 15.25 5.84375 14.1875 5.4375C14.6562 4.4375 14.4688 3.1875 13.6562 2.34375C12.8125 1.53125 11.5625 1.34375 10.5625 1.8125C10.1562 0.75 9.15625 0 8 0C6.8125 0 5.8125 0.75 5.40625 1.8125C4.40625 1.34375 3.15625 1.53125 2.34375 2.34375C1.5 3.1875 1.3125 4.4375 1.78125 5.4375C0.71875 5.84375 0 6.84375 0 8C0 9.1875 0.71875 10.1875 1.78125 10.5938C1.3125 11.5938 1.5 12.8438 2.34375 13.6562C3.15625 14.5 4.40625 14.6875 5.40625 14.2188C5.8125 15.2812 6.8125 16 8 16C9.15625 16 10.1562 15.2812 10.5625 14.2188C11.5938 14.6875 12.8125 14.5 13.6562 13.6562C14.4688 12.8438 14.6562 11.5938 14.1875 10.5938C15.25 10.1875 16 9.1875 16 8ZM11.4688 6.625L7.375 10.6875C7.21875 10.8438 7 10.8125 6.875 10.6875L4.5 8.3125C4.375 8.1875 4.375 7.96875 4.5 7.8125L5.3125 7C5.46875 6.875 5.6875 6.875 5.8125 7.03125L7.125 8.34375L10.1562 5.34375C10.3125 5.1875 10.5312 5.1875 10.6562 5.34375L11.4688 6.15625C11.5938 6.28125 11.5938 6.5 11.4688 6.625Z"></path>
-            </svg>
-        {% endif %}
-        {% if user.badge or user.banned %}
+        <a class="username_text" href="{{ url_for("main.user",user_id=user.id) }}">
             {% if user.banned %}
-                <span class="tag tag-ban">封禁用户</span>{% else %}
-                <span class="tag tag-{{ color }}">{{ user.badge }}</span>
+                <span class="user-banned">{{ user.username }}</span>
+                {% set color="banned" %}
+            {% elif user.is_ladmin %}
+                <span class="user-purple">{{ user.username }}</span>
+                {% set color="purple" %}
+
+            {% elif user.perm//16==1 %}
+                <span class="user-red">{{ user.username }}</span>
+                {% set color="red" %}
+
+            {% else %}
+                <span class="user-blue">{{ user.username }}</span>
+                {% set color="blue" %}
+
             {% endif %}
-        {% endif %}
+            {% if user.verified %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="#3498db"
+                     style="margin-bottom: 3px;">
+                    <path d="M16 8C16 6.84375 15.25 5.84375 14.1875 5.4375C14.6562 4.4375 14.4688 3.1875 13.6562 2.34375C12.8125 1.53125 11.5625 1.34375 10.5625 1.8125C10.1562 0.75 9.15625 0 8 0C6.8125 0 5.8125 0.75 5.40625 1.8125C4.40625 1.34375 3.15625 1.53125 2.34375 2.34375C1.5 3.1875 1.3125 4.4375 1.78125 5.4375C0.71875 5.84375 0 6.84375 0 8C0 9.1875 0.71875 10.1875 1.78125 10.5938C1.3125 11.5938 1.5 12.8438 2.34375 13.6562C3.15625 14.5 4.40625 14.6875 5.40625 14.2188C5.8125 15.2812 6.8125 16 8 16C9.15625 16 10.1562 15.2812 10.5625 14.2188C11.5938 14.6875 12.8125 14.5 13.6562 13.6562C14.4688 12.8438 14.6562 11.5938 14.1875 10.5938C15.25 10.1875 16 9.1875 16 8ZM11.4688 6.625L7.375 10.6875C7.21875 10.8438 7 10.8125 6.875 10.6875L4.5 8.3125C4.375 8.1875 4.375 7.96875 4.5 7.8125L5.3125 7C5.46875 6.875 5.6875 6.875 5.8125 7.03125L7.125 8.34375L10.1562 5.34375C10.3125 5.1875 10.5312 5.1875 10.6562 5.34375L11.4688 6.15625C11.5938 6.28125 11.5938 6.5 11.4688 6.625Z"></path>
+                </svg>
+            {% endif %}
+            {% if user.badge or user.banned %}
+                {% if user.banned %}
+                    <span class="tag tag-ban">封禁用户</span>{% else %}
+                    <span class="tag tag-{{ color }}">{{ user.badge }}</span>
+                {% endif %}
+            {% endif %}
         </a>
     {% else %}
         <span style="color:#999">未登录用户</span>
@@ -346,8 +347,13 @@
     </nav>
 {%- endmacro %}
 {% macro captcha(id) %}
-    <img src="{{ url_for('gen_captcha') }}?t={{timestamp}}" alt="CAPTCHA" id="{{ id }}">
-    <script>(d=>{const _c=document.getElementById("{{id}}");_c.addEventListener('click',_=>{_c.src="{{url_for('gen_captcha')}}?t="+new Date().getTime()})})(document);</script>
+    <img src="{{ url_for('main.gen_captcha') }}?t={{ timestamp }}" alt="CAPTCHA" id="{{ id }}">
+    <script>(d => {
+        const _c = document.getElementById("{{id}}");
+        _c.addEventListener('click', _ => {
+            _c.src = "{{url_for('main.gen_captcha')}}?t=" + new Date().getTime()
+        })
+    })(document);</script>
 {% endmacro %}
 <html lang="zh">
 <head>
@@ -359,10 +365,13 @@
     <style>
         header {
             color: white;
-            background: #0a53be;
+            background: rgba(5, 65, 153, 0.89);
+            backdrop-filter: blur(5px);
             padding: 5px;
             position: sticky;
             top: 0;
+            z-index: 99999;
+
         }
 
         .username_text {
@@ -445,12 +454,448 @@
             margin: 0 0 20px;
             border-left: 5px solid #eee;
         }
+
         @font-face {
             font-family: "JinShanYunJiShuTi";
             src: url("/static/fonts/jsyjst.ttf");
         }
+
         #logo {
             font-family: "JinShanYunJiShuTi", sans-serif;
+        }
+
+        .admonition {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 4px solid;
+            margin: 1rem;
+        }
+
+        .admonition:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .admonition-title {
+            font-weight: 600;
+            padding: 0.5rem 0.5rem 0.5rem 3.5rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+            margin-bottom: 0rem;
+        }
+
+        .admonition-title::before {
+            content: "";
+            position: absolute;
+            left: 1.2rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .admonition p:not(.admonition-title) {
+            padding: 1rem 1.5rem 1.5rem 1.5rem;
+            line-height: 1.6;
+            color: #444;
+            background: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+
+        .admonition.attention {
+            border-color: #ff7043;
+            background: linear-gradient(135deg, rgba(255, 243, 224, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);
+        }
+
+        .admonition.attention .admonition-title {
+            color: #bf360c;
+            background: rgba(255, 243, 224, 0.5);
+        }
+
+        .admonition.attention .admonition-title::before {
+            content: "⚠";
+            background: rgba(255, 112, 67, 0.15);
+            color: #ff7043;
+        }
+
+        .admonition.caution {
+            border-color: #ffc107;
+            background: linear-gradient(135deg, rgba(255, 249, 196, 0.9) 0%, rgba(255, 253, 231, 0.9) 100%);
+        }
+
+        .admonition.caution .admonition-title {
+            color: #8d6e00;
+            background: rgba(255, 249, 196, 0.5);
+        }
+
+        .admonition.caution .admonition-title::before {
+            content: "⚠";
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .admonition.danger {
+            border-color: #f44336;
+            background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 241, 0.9) 100%);
+        }
+
+        .admonition.danger .admonition-title {
+            color: #b71c1c;
+            background: rgba(255, 235, 238, 0.5);
+        }
+
+        .admonition.danger .admonition-title::before {
+            content: "☠";
+            background: rgba(244, 67, 54, 0.15);
+            color: #f44336;
+        }
+
+        .admonition.error {
+            border-color: #e53935;
+            background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 241, 0.9) 100%);
+        }
+
+        .admonition.error .admonition-title {
+            color: #c62828;
+            background: rgba(255, 235, 238, 0.5);
+        }
+
+        .admonition.error .admonition-title::before {
+            content: "✖";
+            background: rgba(229, 57, 53, 0.15);
+            color: #e53935;
+        }
+
+        .admonition.hint {
+            border-color: #4caf50;
+            background: linear-gradient(135deg, rgba(232, 245, 233, 0.9) 0%, rgba(240, 255, 241, 0.9) 100%);
+        }
+
+        .admonition.hint .admonition-title {
+            color: #2e7d32;
+            background: rgba(232, 245, 233, 0.5);
+        }
+
+        .admonition.hint .admonition-title::before {
+            content: "💡";
+            background: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+        }
+
+        .admonition.important {
+            border-color: #9c27b0;
+            background: linear-gradient(135deg, rgba(243, 229, 245, 0.9) 0%, rgba(248, 237, 255, 0.9) 100%);
+        }
+
+        .admonition.important .admonition-title {
+            color: #6a1b9a;
+            background: rgba(243, 229, 245, 0.5);
+        }
+
+        .admonition.important .admonition-title::before {
+            content: "❗";
+            background: rgba(156, 39, 176, 0.15);
+            color: #9c27b0;
+        }
+
+        .admonition.note {
+            border-color: #2196f3;
+            background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.9) 100%);
+        }
+
+        .admonition.note .admonition-title {
+            color: #0d47a1;
+            background: rgba(227, 242, 253, 0.5);
+        }
+
+        .admonition.note .admonition-title::before {
+            content: "ℹ";
+            background: rgba(33, 150, 243, 0.15);
+            color: #2196f3;
+            font-weight: 900;
+        }
+
+        .admonition.tip {
+            border-color: #00bcd4;
+            background: linear-gradient(135deg, rgba(224, 247, 250, 0.9) 0%, rgba(240, 255, 255, 0.9) 100%);
+        }
+
+        .admonition.tip .admonition-title {
+            color: #00838f;
+            background: rgba(224, 247, 250, 0.5);
+        }
+
+        .admonition.tip .admonition-title::before {
+            content: "💡";
+            background: rgba(0, 188, 212, 0.15);
+            color: #00bcd4;
+        }
+
+        .admonition.warning {
+            border-color: #ff9800;
+            background: linear-gradient(135deg, rgba(255, 243, 224, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);
+        }
+
+        .admonition.warning .admonition-title {
+            color: #e65100;
+            background: rgba(255, 243, 224, 0.5);
+        }
+
+        .admonition.warning .admonition-title::before {
+            content: "⚠";
+            background: rgba(255, 152, 0, 0.15);
+            color: #ff9800;
+            font-size: 18px;
+        }
+
+        {#/* 警告样式 */#}
+        {#.admonition.warning {#}
+        {#    border-color: #ff9800;#}
+        {#    background: linear-gradient(135deg, rgba(255, 243, 224, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);#}
+
+        {##}
+        {#.admonition.warning .admonition-title {#}
+        {#    color: #e65100;#}
+        {#    background: rgba(255, 243, 224, 0.4);#}
+
+        {##}
+        {#.admonition.warning .admonition-title::before {#}
+        {#    content: "⚠";#}
+        {#    background: rgba(255, 152, 0, 0.15);#}
+        {#    color: #ff9800;#}
+        {#    font-size: 16px;#}
+
+        {##}
+        {#/* 错误样式 */#}
+        {#.admonition.error {#}
+        {#    border-color: #f44336;#}
+        {#    background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 241, 0.9) 100%);#}
+
+        {##}
+        {#.admonition.error .admonition-title {#}
+        {#    color: #c62828;#}
+        {#    background: rgba(255, 235, 238, 0.4);#}
+
+        {##}
+        {#.admonition.error .admonition-title::before {#}
+        {#    content: "✖";#}
+        {#    background: rgba(244, 67, 54, 0.15);#}
+        {#    color: #f44336;#}
+
+        {##}
+        {#/* 信息样式 */#}
+        {#.admonition.info {#}
+        {#    border-color: #2196f3;#}
+        {#    background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.9) 100%);#}
+
+        {##}
+        {#.admonition.info .admonition-title {#}
+        {#    color: #0d47a1;#}
+        {#    background: rgba(227, 242, 253, 0.4);#}
+
+        {##}
+        {#.admonition.info .admonition-title::before {#}
+        {#    content: "ℹ";#}
+        {#    background: rgba(33, 150, 243, 0.15);#}
+        {#    color: #2196f3;#}
+        {#    font-weight: 900;#}
+
+        {##}
+        {#/* 笔记样式 */#}
+        {#.admonition.note {#}
+        {#    border-color: #9c27b0;#}
+        {#    background: linear-gradient(135deg, rgba(243, 229, 245, 0.9) 0%, rgba(248, 237, 255, 0.9) 100%);#}
+
+        {##}
+        {#.admonition.note .admonition-title {#}
+        {#    color: #6a1b9a;#}
+        {#    background: rgba(243, 229, 245, 0.4);#}
+
+        {##}
+        {#.admonition.note .admonition-title::before {#}
+        {#    content: "✎";#}
+        {#    background: rgba(156, 39, 176, 0.15);#}
+        {#    color: #9c27b0;#}
+
+        {##}
+        {#/* 成功样式 */#}
+        {#.admonition.success {#}
+        {#    border-color: #4caf50;#}
+        {#    background: linear-gradient(135deg, rgba(232, 245, 233, 0.9) 0%, rgba(240, 255, 241, 0.9) 100%);#}
+
+        {##}
+        {#.admonition.success .admonition-title {#}
+        {#    color: #2e7d32;#}
+        {#    background: rgba(232, 245, 233, 0.4);#}
+
+        {##}
+        {#.admonition.success .admonition-title::before {#}
+        {#    content: "✓";#}
+        {#    background: rgba(76, 175, 80, 0.15);#}
+        {#    color: #4caf50;#}
+        .toc {
+            background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.95) 100%);
+            border-radius: 12px;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            margin:1rem;
+        }
+
+        .toc:hover {
+            box-shadow: 0 12px 35px rgba(52, 152, 219, 0.25);
+            transform: translateY(-3px);
+        }
+
+        .toc summary {
+            padding: 1.2rem 1.5rem;
+            background: rgba(52, 152, 219, 0.1);
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 1.25rem;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(52, 152, 219, 0.2);
+            transition: background 0.3s ease;
+        }
+
+        .toc summary:hover {
+            background: rgba(52, 152, 219, 0.15);
+        }
+
+        .toc summary::marker {
+            color: #3498db;
+            font-size: 1.1rem;
+        }
+
+        .toc summary::before {
+            content: "📑";
+            margin-right: 12px;
+            font-size: 1.4rem;
+            transition: transform 0.3s ease;
+        }
+
+        .toc[open] summary::before {
+            content: "📖";
+        }
+
+        .toc summary::-webkit-details-marker {
+            color: #3498db;
+            font-size: 1.1rem;
+        }
+
+        .toc ul {
+            list-style-type: none; /* 去除默认的点 */
+            padding: 1.2rem 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .toc ul ul {
+            padding-left: 1.8rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0;
+        }
+
+        .toc li {
+            margin-bottom: 0.7rem;
+            position: relative;
+            transition: all 0.3s ease;
+            padding-left: 1.5rem; /* 为层级指示器留出空间 */
+        }
+
+        .toc li:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 层级指示器 - 替代点的方案 */
+        {#.toc li::before {#}
+        {#    content: "";#}
+        {#    position: absolute;#}
+        {#    left: 0;#}
+        {#    top: 50%;#}
+        {#    transform: translateY(-50%);#}
+        {#    width: 8px;#}
+        {#    height: 8px;#}
+        {#    border-radius: 2px;#}
+        {#    background: #3498db;#}
+        {#    opacity: 0.7;#}
+        {#    transition: all 0.3s ease;#}
+        {#}#}
+
+        {#.toc > ul > li::before {#}
+        {#    width: 10px;#}
+        {#    height: 10px;#}
+        {#    background: #2c3e50;#}
+        {#}#}
+
+        .toc a {
+            text-decoration: none;
+            color: #2c3e50;
+            display: block;
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .toc a:hover {
+            color: #2980b9;
+            background: rgba(52, 152, 219, 0.1);
+            transform: translateX(5px);
+        }
+
+        .toc a:hover::before {
+            width: 100%;
+        }
+
+        /* 不同层级样式 */
+        .toc > ul > li > a {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2c3e50;
+            position: relative;
+            padding-left: 0;
+        }
+
+        .toc > ul > li > a::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background: #3498db;
+            transition: width 0.3s ease;
+        }
+
+        .toc ul ul > li > a {
+            font-size: 1rem;
+            color: #34495e;
+        }
+
+        .toc ul ul ul > li > a {
+            font-size: 0.95rem;
+            color: #5d6d7e;
+        }
+
+        .toc ul ul ul ul > li > a {
+            font-size: 0.9rem;
+            color: #7f8c8d;
         }
     </style>
     {% block headextra %}
@@ -486,8 +931,8 @@
             });
         });
     </script>
-<link rel="icon" href="/favicon.ico"/>
-<link rel="shortcut-icon" href="/favicon.ico"/>
+    <link rel="icon" href="/favicon.ico"/>
+    <link rel="shortcut-icon" href="/favicon.ico"/>
 
     {{ moment.include_moment() }}
     {{ moment.locale(auto_detect=True) }}
@@ -496,15 +941,18 @@
 <div id="app">
     <header>
 
-        <a class="headtext ht-big logo" href="/SeptemberForum/app/static" id="logo">班级论坛<!-- <img src="/static/icon.png" alt="班级论坛" height="100"/>--></a>
+        <a class="headtext ht-big logo" href="/" id="logo">论坛
+            <!-- <img src="/static/icon.png" alt="班级论坛" height="100"/>--></a>
         <a href="/forum/_all" style="font-size:1em;" class="headtext">所有板块</a>
         <a href="/post/_new" style="font-size:1em;" class="headtext">发布帖子</a>
-            <a href="/operations" style="font-size:1em;" class="headtext">所有操作</a>
+        <a href="/operations" style="font-size:1em;" class="headtext">所有操作</a>
         {% if current_user.is_authenticated and current_user.is_ladmin %}
-        <a href="{{ url_for("admin") }}" style="font-size:1em;" class="headtext">后台</a>
+            <a href="{{ url_for("admin.admin_backstage") }}" style="font-size:1em;" class="headtext">后台</a>
         {%- endif -%}
         {% if current_user.is_authenticated %}
-            <span style="float:right;font-size:1em" class="headtext"><a class="headtext" href="{{ url_for('user', uid=current_user.id) }}" style="margin:unset;">{{ current_user.username }}</a> | <a
+            <span style="float:right;font-size:1em" class="headtext"><a class="headtext"
+                                                                        href="{{ url_for('main.user', user_id=current_user.id) }}"
+                                                                        style="margin:unset;">{{ current_user.username }}</a> | <a
                     href="/auth/logout" style="text-decoration: none;color:white">Logout</a></span>
         {% else %}
             <a href="/auth/login" style="float:right;font-size:1em" class="headtext">Login</a>

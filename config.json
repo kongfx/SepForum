@@ -1,6 +1,7 @@
 {
-  "SECRET_KEY": "",
+  "SECRET_KEY": "FILE",
   "FORUM_NAME": "论坛",
   "FORUM_ADMIN_USER_NAME": "root",
-  "DATABASE_URL": "sqlite:///data.db"
+  "DATABASE_URL": "sqlite:///data.db",
+  "FLASK_CONFIG": "development"
 }

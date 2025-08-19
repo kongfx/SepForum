@@ -20,7 +20,7 @@
                     <td>{{ user.username }}</td>
                     <td>{% if user.confirm_denied %}申请被打回{% else %}申请待审核{% endif %}</td>
                     <td>{{ user.reg_reason[:50] }}</td>
-                    <td><a href="{{ url_for('admin_confirm_user_op', user_id=user.id) }}">审核</a></td>
+                    <td><a href="{{ url_for('.admin_confirm_user_op', user_id=user.id) }}">审核</a></td>
                 </tr>
             {% endfor %}
         </tbody>

@@ -21,7 +21,7 @@ def handle_exception(e):
     time = datetime.datetime.now().timestamp()
     code = hashlib.md5((tbstr + str(time)).encode('utf-8')).hexdigest()
     user_agent = request.headers.get('User-Agent')
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and request.endpoint != "auth.login":
         data = json.loads(g.operation.data)
         data['errid'] = code
         g.operation.data = json.dumps(data)
