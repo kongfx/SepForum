@@ -2,12 +2,13 @@ import datetime
 import os
 
 from flask import g
-from sqlalchemy import Column, String, create_engine, Integer, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, String, create_engine, Integer, Boolean, DateTime, ForeignKey, Text, Date
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.orm import declarative_base
 import bcrypt
 from flask_login import UserMixin
 from . import login_manager
+
 Base = declarative_base()
 
 
@@ -18,6 +19,7 @@ class Permission:
     MODERATE_DISCUSSION = 0b1000
     RED_NAME = 0b10000
     BACKSTAGE_ENTRANCE = 0b100000
+    COIN_MANAGE = 0b1000000
     ADMINISTRATOR = 0b10000000
 
 
@@ -58,14 +60,17 @@ class User(Base, UserMixin):
     operations = relationship('Operation', backref='user', lazy='dynamic')
     confirmed = Column(Boolean, default=False)
     reg_reason = Column(Text)
-    confirm_denied=Column(Boolean, default=False)
+    confirm_denied = Column(Boolean, default=False)
     experience = Column(Integer, default=0)
     points = Column(Integer, default=0)
     register_time = Column(DateTime, default=datetime.datetime.utcnow)
-
+    last_punch_date = Column(Date, default=datetime.date(2000, 1, 1))
+    punch_days = Column(Integer, default=0)
+    coin_records = relationship('CoinRecord', backref='user', lazy='dynamic')
+    prize_codes = relationship('PrizeCode', backref='user', lazy='dynamic')
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
-        if self.username == 'TheKo114':
+        if self.username == os.environ['FORUM_ADMIN_USER_NAME']:
             self.badge = '吉祥物啦'
             self.perm = 0xffff
             self.nickname = 'TheKo114'
@@ -89,6 +94,32 @@ class User(Base, UserMixin):
     def has_perm(self, perm):
         return bool(self.perm & perm)
 
+    @property
+    def punched(self):
+        if datetime.date.today() == self.last_punch_date:
+            return True
+        return False
+
+    def punch(self):
+        if not self.last_punch_date:
+            self.last_punch_date = datetime.date(2000, 1, 1)
+
+        no_punch_days = (datetime.date.today() - self.last_punch_date).days -1
+        self.last_punch_date = datetime.date.today()
+        if no_punch_days > 0:
+            self.punch_days = max(0, self.punch_days - no_punch_days)
+        self.punch_days += 1
+        g.dbs.add(self)
+        g.dbs.commit()
+
+    def add_points(self, points, reason='手动操作'):
+        self.points += points
+        record = CoinRecord(user_id=self.id, value=points, reason=reason, remainder=self.points)
+        g.dbs.add(record)
+        g.dbs.commit()
+
+
+
 
 class Post(Base):
     __tablename__ = 'posts'
@@ -105,7 +136,6 @@ class Post(Base):
     locked = Column(Boolean, default=False)
     topped = Column(Boolean, default=False)
     show_author = Column(Boolean, default=True)
-
 
 
 class Comment(Base):
@@ -183,11 +213,13 @@ class Operation(Base):
     datetime = Column(DateTime, default=datetime.datetime.utcnow)
     status = Column(Integer, default=200)
 
+
 class Captcha(Base):
     __tablename__ = 'captchas'
     id = Column(Integer, primary_key=True)
     token = Column(String, unique=True)
     value = Column(String)
+
 
 class Prize(Base):
     __tablename__ = 'prizes'
@@ -199,6 +231,7 @@ class Prize(Base):
     banned = Column(Boolean, default=False)
     codes = relationship('PrizeCode', backref='prize', lazy='dynamic')
 
+
 class PrizeCode(Base):
     __tablename__ = 'prize_codes'
     id = Column(Integer, primary_key=True)
@@ -206,20 +239,25 @@ class PrizeCode(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     prize_id = Column(Integer, ForeignKey('prizes.id'), nullable=False)
     code = Column(String)
+    time = Column(DateTime, default=datetime.datetime.utcnow)
 
-class PrizeRecord(Base):
-    __tablename__ = 'prize_records'
+
+class CoinRecord(Base):
+    __tablename__ = 'coin_records'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    used = Column(Integer)
+    value = Column(Integer)
     remainder = Column(Integer)
     reason = Column(Text)
+    time = Column(DateTime, default=datetime.datetime.utcnow)
 
 
 engine = create_engine(os.environ.get('DATABASE_URL') or 'sqlite:///data.db')
 Base.metadata.create_all(engine)
 DBSession = sessionmaker(bind=engine)
 metadata = Base.metadata
+
+
 # import
 
 @login_manager.user_loader

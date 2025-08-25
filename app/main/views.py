@@ -1,5 +1,6 @@
 import json
 import math
+import os
 import sys
 import time
 
@@ -27,7 +28,7 @@ REPLY_PER_PAGE = 25
 
 @main.app_context_processor
 def context_processor():
-    return dict(timestamp=datetime.datetime.now().timestamp(), Permission=db.Permission)
+    return dict(timestamp=datetime.datetime.now().timestamp(), Permission=db.Permission, FORUM_NAME=os.environ.get('FORUM_NAME', '论坛'))
 
 
 @main.before_app_request
@@ -145,7 +146,7 @@ def forum(forum_id):
 @main.route('/post/_new/', methods=['GET', 'POST'])
 @login_required
 def new_post():
-    if current_user.perm & db.Permission.SEND_POST == 0:
+    if not current_user.has_perm(Permission.SEND_POST):
         abort(404)
     form = NewPostForm()
     if current_user.perm & Permission.MODERATE_DISCUSSION:
@@ -173,10 +174,10 @@ def new_post():
 
 
 @main.route('/post/<int:post_id>/', methods=['GET', 'POST'])
+@permission_required(Permission.READ)
 @login_required
 def post(post_id):
-    if current_user.perm & db.Permission.READ == 0:
-        abort(404)
+
     post = g.dbs.query(db.Post).filter(db.Post.id == post_id).first()
     if post is None:
         abort(404)

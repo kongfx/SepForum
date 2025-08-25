@@ -184,7 +184,7 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <title>论坛管理后台 - {% block title %}{% endblock %}</title>
+    <title>{{ FORUM_NAME }}管理后台 - {% block title %}{% endblock %}</title>
     <style>
         .username_text {
             text-decoration: none;
@@ -367,12 +367,14 @@
         {#    transition: transform 0.3s ease, box-shadow 0.3s ease;#}
         {#    border-left: 4px solid;#}
         {#    margin:1rem;#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition:hover {#}
         {#    transform: translateY(-5px);#}
         {#    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition-title {#}
         {#    font-weight: 600;#}
@@ -382,7 +384,8 @@
         {#    align-items: center;#}
         {#    font-size: 1.1rem;#}
         {#    margin-bottom: 0rem;#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition-title::before {#}
         {#    content: "";#}
@@ -396,7 +399,8 @@
         {#    border-radius: 50%;#}
         {#    font-size: 14px;#}
         {#    font-weight: 900;#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition p:not(.admonition-title) {#}
         {#    padding: 1rem 1.5rem 1.5rem 1.5rem;#}
@@ -404,77 +408,90 @@
         {#    color: #444;#}
         {#    background: rgba(255, 255, 255, 0.7);#}
         {#    margin: 0;#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#/* 警告样式 */#}
         {#.admonition.warning {#}
         {#    border-color: #ff9800;#}
         {#    background: linear-gradient(135deg, rgba(255, 243, 224, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition.warning .admonition-title {#}
         {#    color: #e65100;#}
         {#    background: rgba(255, 243, 224, 0.4);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition.warning .admonition-title::before {#}
         {#    content: "⚠";#}
         {#    background: rgba(255, 152, 0, 0.15);#}
         {#    color: #ff9800;#}
         {#    font-size: 16px;#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#/* 错误样式 */#}
         {#.admonition.error {#}
         {#    border-color: #f44336;#}
         {#    background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 241, 0.9) 100%);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition.error .admonition-title {#}
         {#    color: #c62828;#}
         {#    background: rgba(255, 235, 238, 0.4);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition.error .admonition-title::before {#}
         {#    content: "✖";#}
         {#    background: rgba(244, 67, 54, 0.15);#}
         {#    color: #f44336;#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#/* 信息样式 */#}
         {#.admonition.info {#}
         {#    border-color: #2196f3;#}
         {#    background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.9) 100%);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition.info .admonition-title {#}
         {#    color: #0d47a1;#}
         {#    background: rgba(227, 242, 253, 0.4);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition.info .admonition-title::before {#}
         {#    content: "ℹ";#}
         {#    background: rgba(33, 150, 243, 0.15);#}
         {#    color: #2196f3;#}
         {#    font-weight: 900;#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#/* 笔记样式 */#}
         {#.admonition.note {#}
         {#    border-color: #9c27b0;#}
         {#    background: linear-gradient(135deg, rgba(243, 229, 245, 0.9) 0%, rgba(248, 237, 255, 0.9) 100%);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition.note .admonition-title {#}
         {#    color: #6a1b9a;#}
         {#    background: rgba(243, 229, 245, 0.4);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition.note .admonition-title::before {#}
         {#    content: "✎";#}
         {#    background: rgba(156, 39, 176, 0.15);#}
         {#    color: #9c27b0;#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#/* 成功样式 */#}
         {#.admonition.success {#}
@@ -485,13 +502,15 @@
         {#.admonition.success .admonition-title {#}
         {#    color: #2e7d32;#}
         {#    background: rgba(232, 245, 233, 0.4);#}
-        {#}#}
+        {
+        #}#}
         {##}
         {#.admonition.success .admonition-title::before {#}
         {#    content: "✓";#}
         {#    background: rgba(76, 175, 80, 0.15);#}
         {#    color: #4caf50;#}
-        {#}#}
+        {
+        #}#}
 
         .admonition {
             border-radius: 10px;
@@ -685,6 +704,7 @@
             color: #ff9800;
             font-size: 18px;
         }
+
         .toc {
             background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.95) 100%);
             border-radius: 12px;
@@ -693,7 +713,7 @@
             overflow: hidden;
             margin-bottom: 2rem;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-            margin:1rem;
+            margin: 1rem;
 
         }
 
@@ -778,13 +798,15 @@
         {#    background: #3498db;#}
         {#    opacity: 0.7;#}
         {#    transition: all 0.3s ease;#}
-        {#}#}
+        {
+        #}#}
 
         {#.toc > ul > li::before {#}
         {#    width: 10px;#}
         {#    height: 10px;#}
         {#    background: #2c3e50;#}
-        {#}#}
+        {
+        #}#}
 
         .toc a {
             text-decoration: none;
@@ -903,12 +925,17 @@
                 <li><a href="{{ url_for(".admin_backstage") }}"><i
                         class="bi bi-reply-fill"></i><span>回帖管理</span></a></li>
             {% endif %}
+            {% if current_user.has_perm(Permission.COIN_MANAGE) %}
+                <li><a href="{{ url_for(".coin_records") }}"><i class="bi bi-file-text"></i><span>金币记录</span></a>
+                </li>
+                <li><a href="{{ url_for(".give_coin") }}"><i
+                        class="bi bi-plus"></i><span>给予金币</span></a></li>            {% endif %}
         </ul>
     </div>
     <div id="content_main">
         <div id="topbar">
             <button id="collapse"><i class="bi bi-list"></i></button>
-            <a id="logo" href="/">论坛</a>
+            <a id="logo" href="/">{{FORUM_NAME}}</a>
             <div id="kr"><a class="lnk"
                             href="{{ url_for("main.user", user_id=current_user.id) }}">{{ current_user.username }}</a> |
                 <a

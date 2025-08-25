@@ -1,0 +1,29 @@
+{% extends 'points/points_panel_base.html' %}
+{% block title %}金币记录{% endblock %}
+{% block app %}
+    <h3>金币记录</h3>
+	<table class="table table-hover">
+    <thead>
+            <tr>
+                <th>#</th>
+                <th>时间</th>
+                <th>缘由</th>
+                <th>获得（+）/支出（-）</th>
+                <th>结余</th>
+
+            </tr>
+        </thead>
+    <tbody>
+    {% for i in records %}
+        <tr>
+        <th>{{ i.id }}</th>
+        <td>{{  moment(i.time).format('LLLL')  }}</td>
+        <td>{{ i.reason }}</td>
+        <td>{% if i.value > 0 %}+{{ i.value }}{% else %}{{ i.value }}{% endif %}</td>
+        <td>{{ i.remainder }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    {{ page_util(page,max_page) }}
+{% endblock %}

@@ -1,179 +1,5 @@
-<!DOCTYPE html>
-
 {% from 'bootstrap5/utils.html' import render_messages %}
-{% from 'base/utils.html' import render_icon, arg_url_for %}
 
-
-{% macro build_url(record, endpoint, url_tuples, model, pk_field) %}
-    {% if model != None %}
-        {% set record = model.query.get(record[pk_field]) %}
-    {% endif %}
-    {% with url_params = {} -%}
-        {%- do url_params.update(request.view_args if not endpoint else {}),
-            url_params.update(request.args if not endpoint else {}) -%}
-        {% for url_parameter, db_field in url_tuples %}
-            {% if db_field.startswith(':') and '.' in db_field %}
-                {%- set db_field = db_field[1:].split('.') -%}
-                {%- do url_params.update({url_parameter: record[db_field[0]][db_field[1]]}) -%}
-            {% elif db_field.startswith(':') %}
-                {%- set db_field = db_field[1:] -%}
-                {%- do url_params.update({url_parameter: record[db_field]}) -%}
-            {% else %}
-                {%- do url_params.update({url_parameter: db_field}) -%}
-            {% endif %}
-        {% endfor %}
-        {{ arg_url_for(endpoint, url_params) }}
-    {%- endwith %}
-{%- endmacro %}
-
-{% macro render_table(data,
-                      titles=None,
-                      primary_key='id',
-                      primary_key_title='#',
-                      caption=None,
-                      table_classes=None,
-                      header_classes=None,
-                      body_classes=None,
-                      responsive=False,
-                      responsive_class='table-responsive',
-                      safe_columns=None,
-                      userize_columns=None,
-                      model=None,
-                      show_actions=False,
-                      actions_title='Actions',
-                      custom_actions=None,
-                      view_url=None,
-                      edit_url=None,
-                      delete_url=None,
-                      new_url=None,
-                      action_pk_placeholder=':id') %}
-    {% if not titles %}
-        {% set titles = get_table_titles(data, primary_key, primary_key_title) %}
-    {% endif %}
-    {% if responsive %}
-        <div class="{{ responsive_class }}">
-    {% endif %}
-<table class="table{% if table_classes %}{{ ' ' + table_classes }}{% endif %}">
-    {% if caption %}
-        <caption>{{ caption }}</caption>
-    {% endif %}
-    <thead{% if header_classes %} class="{{ header_classes }}"{% endif %}>
-    <tr>
-        {% for title in titles %}
-            <th scope="col">{{ title[1] }}</th>
-        {% endfor %}
-        {% if show_actions %}
-            <th scope="col">{{ actions_title }}
-                {% if new_url %}
-                    <a class="action-icon text-decoration-none"
-                            {% if new_url.startswith('/') %}
-                       href="{{ new_url }}"
-                            {% else %}
-                       href="{{ url_for(new_url) }}"
-                            {% endif %}
-                       title="{{ config['BOOTSTRAP_TABLE_NEW_TITLE'] }}">
-                        {{ render_icon('plus-circle-fill') }}
-                    </a>
-                {% endif %}
-            </th>
-        {% endif %}
-    </tr>
-    </thead>
-    <tbody{% if body_classes %} class="{{ body_classes }}"{% endif %}>
-    {% for row in data %}
-        <tr>
-            {% for title in titles %}
-                {% set key = title[0] %}
-                {% set value = row[key] %}
-                {%- if key == primary_key -%}
-                    <th scope="row">
-                        {%- else -%}
-                    <td>
-                {%- endif -%}
-            {%- if value is string -%}
-                {%- if safe_columns and key in safe_columns -%}
-                    {{ value|safe }}
-                {%- else -%}
-                    {%- if userize_columns and key in userize_columns -%}
-                        {{ render_user(value) }}
-                    {%- else -%}
-                        {{ value }}
-                    {%- endif -%}
-                {%- endif -%}
-            {%- elif value.__class__.__base__.__name__ == 'Enum' -%}
-                {{ value.value }}
-            {%- else -%}
-                {{ value }}
-            {%- endif -%}
-            {%- if key == primary_key -%}
-                </th>
-            {%- else -%}
-                </td>
-            {%- endif -%}
-            {% endfor %}
-            {% if show_actions %}
-                <td>
-                    {% if custom_actions %}
-                        {% for (action_name, action_icon, action_url) in custom_actions %}
-                            <a class="action-icon text-decoration-none"
-                                    {% if action_url is string %}
-                               href="{{ action_url }}"
-                                    {% else %}
-                               href="{{ build_url(row, action_url[0], action_url[1], model, primary_key) | trim }}"
-                                    {% endif %}
-                               title="{{ action_name }}">{{ render_icon(action_icon) }}</a>
-                        {% endfor %}
-                    {% endif %}
-                    {% if view_url %}
-                        <a class="action-icon text-decoration-none"
-                                {% if view_url is string %}
-                           href="{{ view_url }}"
-                                {% else %}
-                           href="{{ build_url(row, view_url[0], view_url[1], model, primary_key) | trim }}"
-                                {% endif %}
-                           title="{{ config['BOOTSTRAP_TABLE_VIEW_TITLE'] }}">
-                            {{ render_icon('eye-fill') }}
-                        </a>
-                    {% endif %}
-                    {% if edit_url -%}
-                        <a class="action-icon text-decoration-none"
-                                {% if edit_url is string %}
-                           href="{{ edit_url }}"
-                                {% else %}
-                           href="{{ build_url(row, edit_url[0], edit_url[1], model, primary_key) | trim }}"
-                                {% endif %}
-                           title="{{ config['BOOTSTRAP_TABLE_EDIT_TITLE'] }}">
-                            {{ render_icon('pencil-fill') }}
-                        </a>
-                    {%- endif %}
-                    {% if delete_url %}
-                        <form class="d-inline"
-                                {% if delete_url is string %}
-                              action="{{ delete_url }}"
-                                {% else %}
-                              action="{{ build_url(row, delete_url[0], delete_url[1], model, primary_key) | trim }}"
-                                {% endif %}
-                              method="post">
-                            {% if csrf_token is undefined %}
-                                {{ raise('You have to enable the CSRFProtect extension from Flask-WTF to use delete_url, see the docs for more details (https://bootstrap-flask.readthedocs.io/en/stable/macros.html#render-table).') }}
-                            {% endif %}
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <button type="submit" class="btn btn-link p-0 border-0 align-baseline"
-                                    title="{{ config['BOOTSTRAP_TABLE_DELETE_TITLE'] }}">
-                                {{ render_icon('trash-fill') }}
-                            </button>
-                        </form>
-                    {% endif %}
-                </td>
-            {% endif %}
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-{% if responsive %}
-    </div>
-{% endif %}
-{% endmacro %}
 {% macro show_user(user) %}
     {% if user.is_authenticated %}
         <a class="username_text" href="{{ url_for("main.user",user_id=user.id) }}">
@@ -349,50 +175,21 @@
 {% macro captcha(id) %}
     <img src="{{ url_for('main.gen_captcha') }}?t={{ timestamp }}" alt="CAPTCHA" id="{{ id }}">
     <script>(d => {
-        const _c = document.getElementById("{{id}}");
+        const _c = d.getElementById("{{id}}");
         _c.addEventListener('click', _ => {
             _c.src = "{{url_for('main.gen_captcha')}}?t=" + new Date().getTime()
         })
     })(document);</script>
 {% endmacro %}
+<!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <title>{{ FORUM_NAME }} - {% block title %}BasePage{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="/static/bootstrap.css">
-    <script src="/static/bootstrap.js"></script>
+    <title>{{ FORUM_NAME }} 积分系统 - {% block title %}{% endblock %}</title>
     <style>
-        header {
-            color: white;
-            background: rgba(5, 65, 153, 0.89);
-            backdrop-filter: blur(5px);
-            padding: 5px;
-            position: sticky;
-            top: 0;
-            z-index: 99999;
-
-        }
-
         .username_text {
             text-decoration: none;
         }
 
-        .headtext {
-            margin: 1rem;
-            text-decoration: none;
-            color: white;
-        }
-
-        .ht-big {
-            font-size: 2.5em;
-
-        }
-
-        #content-main {
-            margin: 8px;
-            padding: 2.25em;
-        }
 
         .user-blue {
             color: rgb(14, 114, 210);
@@ -438,21 +235,88 @@
             background: rgb(142, 68, 173);
         }
 
-        body {
-            background: #eee;
-        }
-
-        #content-main {
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 10px 10px 10px #aaa;
-
-        }
-
         blockquote {
             padding: 1px 20px;
             margin: 0 0 20px;
             border-left: 5px solid #eee;
+        }
+
+        #wrapper {
+            display: flex;
+            height: 100%;
+        }
+
+        #sidebar {
+        {#flex:1;#} background: #222;
+            color: #eee;
+            height: 100vh;
+            width: 200px;
+            transition: all 0.55s ease-in-out 0.05s;
+            padding: 3.5em 0.55em 0.55em;
+            position: sticky;
+            top: 0;
+        }
+
+        #sidebar > ul {
+            list-style-type: none;
+        }
+
+        #sidebar.sz {
+            width: 50px;
+            transition: all 0.55s ease-in-out 0.05s;
+        {#padding:0.2em;#}
+        }
+
+        #sidebar > ul {
+            padding-left: 0.5em;
+        }
+
+        #sidebar.sz > ul > li > a > span {
+        {#display: none;#}{#   opacity:0;#} height: 0;
+            width: 0;
+            transition: all 0.55s ease-in-out 0.15s;
+            margin-left: 0;
+
+        }
+
+        #sidebar > ul > li > a > span {
+            display: inline-block;
+
+            margin-left: 1em;
+            transition: all 0.55s ease-in-out 0.05s;
+            overflow: hidden;
+            position: relative;
+            top: 0.3em;
+        {#padding-top:0.5em;#}
+        }
+
+        {# #sidebar > ul > li > a > i {#}
+        {#     padding-bottom: 0.1em;#}
+        #sidebar > ul > li {
+            position: relative;
+            word-break: keep-all;
+            margin-bottom: 1em;
+        }
+
+        #content_main {
+            flex: 1;
+
+        }
+
+        body {
+            height: 100%;
+        }
+
+        #topbar {
+            background: #fafafae0;
+            backdrop-filter: blur(5px);
+
+            border-bottom: 1px solid #ddd;
+            height: 50px;
+            position: sticky;
+            padding: 2px;
+            top: 0;
+            z-index: 99999;
         }
 
         @font-face {
@@ -462,7 +326,191 @@
 
         #logo {
             font-family: "JinShanYunJiShuTi", sans-serif;
+            font-size: 2em;
+            color: #111;
+            text-decoration: none;
+            padding-left: 0.5em;
         }
+
+        #collapse {
+            background: transparent;
+            border: none;
+            font-size: 1.5em;
+            padding-bottom: 0.1em;
+        }
+
+        #app {
+            padding: 2em;
+        }
+
+        #sidebar a {
+            color: #eee;
+            text-decoration: none;
+        }
+
+        #kr {
+            float: right;
+            vertical-align: center;
+            margin-top: 0.5em;
+        }
+
+        .lnk {
+            text-decoration: none;
+            color: #111;
+
+        }
+
+        {#.admonition {#}
+        {#    border-radius: 10px;#}
+        {#    overflow: hidden;#}
+        {#    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);#}
+        {#    transition: transform 0.3s ease, box-shadow 0.3s ease;#}
+        {#    border-left: 4px solid;#}
+        {#    margin:1rem;#}
+        {
+        #}#}
+        {##}
+        {#.admonition:hover {#}
+        {#    transform: translateY(-5px);#}
+        {#    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);#}
+        {
+        #}#}
+        {##}
+        {#.admonition-title {#}
+        {#    font-weight: 600;#}
+        {#    padding: 0.5rem 0.5rem 0.5rem 3.5rem;#}
+        {#    position: relative;#}
+        {#    display: flex;#}
+        {#    align-items: center;#}
+        {#    font-size: 1.1rem;#}
+        {#    margin-bottom: 0rem;#}
+        {
+        #}#}
+        {##}
+        {#.admonition-title::before {#}
+        {#    content: "";#}
+        {#    position: absolute;#}
+        {#    left: 1.2rem;#}
+        {#    width: 24px;#}
+        {#    height: 24px;#}
+        {#    display: flex;#}
+        {#    align-items: center;#}
+        {#    justify-content: center;#}
+        {#    border-radius: 50%;#}
+        {#    font-size: 14px;#}
+        {#    font-weight: 900;#}
+        {
+        #}#}
+        {##}
+        {#.admonition p:not(.admonition-title) {#}
+        {#    padding: 1rem 1.5rem 1.5rem 1.5rem;#}
+        {#    line-height: 1.6;#}
+        {#    color: #444;#}
+        {#    background: rgba(255, 255, 255, 0.7);#}
+        {#    margin: 0;#}
+        {
+        #}#}
+        {##}
+        {#/* 警告样式 */#}
+        {#.admonition.warning {#}
+        {#    border-color: #ff9800;#}
+        {#    background: linear-gradient(135deg, rgba(255, 243, 224, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);#}
+        {
+        #}#}
+        {##}
+        {#.admonition.warning .admonition-title {#}
+        {#    color: #e65100;#}
+        {#    background: rgba(255, 243, 224, 0.4);#}
+        {
+        #}#}
+        {##}
+        {#.admonition.warning .admonition-title::before {#}
+        {#    content: "⚠";#}
+        {#    background: rgba(255, 152, 0, 0.15);#}
+        {#    color: #ff9800;#}
+        {#    font-size: 16px;#}
+        {
+        #}#}
+        {##}
+        {#/* 错误样式 */#}
+        {#.admonition.error {#}
+        {#    border-color: #f44336;#}
+        {#    background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 241, 0.9) 100%);#}
+        {
+        #}#}
+        {##}
+        {#.admonition.error .admonition-title {#}
+        {#    color: #c62828;#}
+        {#    background: rgba(255, 235, 238, 0.4);#}
+        {
+        #}#}
+        {##}
+        {#.admonition.error .admonition-title::before {#}
+        {#    content: "✖";#}
+        {#    background: rgba(244, 67, 54, 0.15);#}
+        {#    color: #f44336;#}
+        {
+        #}#}
+        {##}
+        {#/* 信息样式 */#}
+        {#.admonition.info {#}
+        {#    border-color: #2196f3;#}
+        {#    background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.9) 100%);#}
+        {
+        #}#}
+        {##}
+        {#.admonition.info .admonition-title {#}
+        {#    color: #0d47a1;#}
+        {#    background: rgba(227, 242, 253, 0.4);#}
+        {
+        #}#}
+        {##}
+        {#.admonition.info .admonition-title::before {#}
+        {#    content: "ℹ";#}
+        {#    background: rgba(33, 150, 243, 0.15);#}
+        {#    color: #2196f3;#}
+        {#    font-weight: 900;#}
+        {
+        #}#}
+        {##}
+        {#/* 笔记样式 */#}
+        {#.admonition.note {#}
+        {#    border-color: #9c27b0;#}
+        {#    background: linear-gradient(135deg, rgba(243, 229, 245, 0.9) 0%, rgba(248, 237, 255, 0.9) 100%);#}
+        {
+        #}#}
+        {##}
+        {#.admonition.note .admonition-title {#}
+        {#    color: #6a1b9a;#}
+        {#    background: rgba(243, 229, 245, 0.4);#}
+        {
+        #}#}
+        {##}
+        {#.admonition.note .admonition-title::before {#}
+        {#    content: "✎";#}
+        {#    background: rgba(156, 39, 176, 0.15);#}
+        {#    color: #9c27b0;#}
+        {
+        #}#}
+        {##}
+        {#/* 成功样式 */#}
+        {#.admonition.success {#}
+        {#    border-color: #4caf50;#}
+        {#    background: linear-gradient(135deg, rgba(232, 245, 233, 0.9) 0%, rgba(240, 255, 241, 0.9) 100%);#}
+        {# } #}
+        {##}
+        {#.admonition.success .admonition-title {#}
+        {#    color: #2e7d32;#}
+        {#    background: rgba(232, 245, 233, 0.4);#}
+        {
+        #}#}
+        {##}
+        {#.admonition.success .admonition-title::before {#}
+        {#    content: "✓";#}
+        {#    background: rgba(76, 175, 80, 0.15);#}
+        {#    color: #4caf50;#}
+        {
+        #}#}
 
         .admonition {
             border-radius: 10px;
@@ -657,91 +705,6 @@
             font-size: 18px;
         }
 
-        {#/* 警告样式 */#}
-        {#.admonition.warning {#}
-        {#    border-color: #ff9800;#}
-        {#    background: linear-gradient(135deg, rgba(255, 243, 224, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);#}
-
-        {##}
-        {#.admonition.warning .admonition-title {#}
-        {#    color: #e65100;#}
-        {#    background: rgba(255, 243, 224, 0.4);#}
-
-        {##}
-        {#.admonition.warning .admonition-title::before {#}
-        {#    content: "⚠";#}
-        {#    background: rgba(255, 152, 0, 0.15);#}
-        {#    color: #ff9800;#}
-        {#    font-size: 16px;#}
-
-        {##}
-        {#/* 错误样式 */#}
-        {#.admonition.error {#}
-        {#    border-color: #f44336;#}
-        {#    background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 241, 0.9) 100%);#}
-
-        {##}
-        {#.admonition.error .admonition-title {#}
-        {#    color: #c62828;#}
-        {#    background: rgba(255, 235, 238, 0.4);#}
-
-        {##}
-        {#.admonition.error .admonition-title::before {#}
-        {#    content: "✖";#}
-        {#    background: rgba(244, 67, 54, 0.15);#}
-        {#    color: #f44336;#}
-
-        {##}
-        {#/* 信息样式 */#}
-        {#.admonition.info {#}
-        {#    border-color: #2196f3;#}
-        {#    background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.9) 100%);#}
-
-        {##}
-        {#.admonition.info .admonition-title {#}
-        {#    color: #0d47a1;#}
-        {#    background: rgba(227, 242, 253, 0.4);#}
-
-        {##}
-        {#.admonition.info .admonition-title::before {#}
-        {#    content: "ℹ";#}
-        {#    background: rgba(33, 150, 243, 0.15);#}
-        {#    color: #2196f3;#}
-        {#    font-weight: 900;#}
-
-        {##}
-        {#/* 笔记样式 */#}
-        {#.admonition.note {#}
-        {#    border-color: #9c27b0;#}
-        {#    background: linear-gradient(135deg, rgba(243, 229, 245, 0.9) 0%, rgba(248, 237, 255, 0.9) 100%);#}
-
-        {##}
-        {#.admonition.note .admonition-title {#}
-        {#    color: #6a1b9a;#}
-        {#    background: rgba(243, 229, 245, 0.4);#}
-
-        {##}
-        {#.admonition.note .admonition-title::before {#}
-        {#    content: "✎";#}
-        {#    background: rgba(156, 39, 176, 0.15);#}
-        {#    color: #9c27b0;#}
-
-        {##}
-        {#/* 成功样式 */#}
-        {#.admonition.success {#}
-        {#    border-color: #4caf50;#}
-        {#    background: linear-gradient(135deg, rgba(232, 245, 233, 0.9) 0%, rgba(240, 255, 241, 0.9) 100%);#}
-
-        {##}
-        {#.admonition.success .admonition-title {#}
-        {#    color: #2e7d32;#}
-        {#    background: rgba(232, 245, 233, 0.4);#}
-
-        {##}
-        {#.admonition.success .admonition-title::before {#}
-        {#    content: "✓";#}
-        {#    background: rgba(76, 175, 80, 0.15);#}
-        {#    color: #4caf50;#}
         .toc {
             background: linear-gradient(135deg, rgba(227, 242, 253, 0.9) 0%, rgba(235, 245, 255, 0.95) 100%);
             border-radius: 12px;
@@ -750,7 +713,8 @@
             overflow: hidden;
             margin-bottom: 2rem;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-            margin:1rem;
+            margin: 1rem;
+
         }
 
         .toc:hover {
@@ -834,13 +798,15 @@
         {#    background: #3498db;#}
         {#    opacity: 0.7;#}
         {#    transition: all 0.3s ease;#}
-        {#}#}
+        {
+        #}#}
 
         {#.toc > ul > li::before {#}
         {#    width: 10px;#}
         {#    height: 10px;#}
         {#    background: #2c3e50;#}
-        {#}#}
+        {
+        #}#}
 
         .toc a {
             text-decoration: none;
@@ -898,6 +864,14 @@
             color: #7f8c8d;
         }
     </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/static/bootstrap.css">
+    <script src="/static/bootstrap.js"></script>
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="icon" href="/favicon.ico"/>
+    <link rel="shortcut-icon" href="/favicon.ico"/>
+    {{ moment.include_moment() }}
+    {{ moment.locale(auto_detect=True) }}
     {% block headextra %}
 
     {% endblock %}
@@ -931,42 +905,55 @@
             });
         });
     </script>
-    <link rel="icon" href="/favicon.ico"/>
-    <link rel="shortcut-icon" href="/favicon.ico"/>
-
-    {{ moment.include_moment() }}
-    {{ moment.locale(auto_detect=True) }}
 </head>
 <body>
-<div id="app">
-    <header>
-
-        <a class="headtext ht-big logo" href="/" id="logo">{{ FORUM_NAME }}
-            <!-- <img src="/static/icon.png" alt="{{ FORUM_NAME }}" height="100"/>--></a>
-        <a href="/forum/_all" style="font-size:1em;" class="headtext">所有板块</a>
-        <a href="/post/_new" style="font-size:1em;" class="headtext">发布帖子</a>
-        <a href="/points" style="font-size:1em;" class="headtext">我的金币</a>
-        {% if current_user.is_authenticated and current_user.is_ladmin %}
-            <a href="{{ url_for("admin.admin_backstage") }}" style="font-size:1em;" class="headtext">后台</a>
-        {%- endif -%}
-        {% if current_user.is_authenticated %}
-            <span style="float:right;font-size:1em" class="headtext"><a class="headtext"
-                                                                        href="{{ url_for('main.user', user_id=current_user.id) }}"
-                                                                        style="margin:unset;">{{ current_user.username }}</a> | <a
-                    href="/auth/logout" style="text-decoration: none;color:white">Logout</a></span>
-        {% else %}
-            <a href="/auth/login" style="float:right;font-size:1em" class="headtext">Login</a>
-        {% endif %}
-    </header>
-    <div style="margin:1em">
-        {{ render_messages() }}
+<div id="wrapper">
+    <div id="sidebar">
+        <ul>
+            <li><a href="{{ url_for(".points_view") }}"><i class="bi bi-coin"></i><span>我的余额</span></a>
+            </li>
+            {#        <li>BBB</li>#}
+            <li><a href="{{ url_for(".points_view") }}"><i class="bi bi-bag"></i><span>金币商店</span></a>
+            </li>
+            <li><a href="{{ url_for(".points_view") }}"><i class="bi bi-cart"></i><span>购物车</span></a>
+            </li>
+            <li><a href="{{ url_for(".points_view") }}"><i
+                    class="bi bi-arrow-left-right"></i><span>金币转账</span></a>
+            <li><a href="{{ url_for(".records") }}"><i class="bi bi-file-text"></i><span>金币记录</span></a>
+            </li>
+            <li><a href="{{ url_for(".points_view") }}"><i
+                    class="bi bi-gift"></i><span>奖励兑换</span></a></li>
+            <li><a href="{{ url_for(".points_view") }}"><i
+                    class="bi bi-search"></i><span>兑换码查询</span></a></li>
+            <li><a href="{{ url_for(".points_view") }}"><i
+                    class="bi bi-plus"></i><span>获得金币</span></a></li>
+        </ul>
     </div>
-    <div id="content-main">
-
-        {% block content %}
-
-        {% endblock %}
+    <div id="content_main">
+        <div id="topbar">
+            <button id="collapse"><i class="bi bi-list"></i></button>
+            <a id="logo" href="/points">{{ FORUM_NAME }} 积分系统</a>
+            <div id="kr"><a class="lnk"
+                            href="{{ url_for("main.user", user_id=current_user.id) }}">{{ current_user.username }}</a> |
+                <a
+                        class="lnk" href="/">主页</a></div>
+        </div>
+        <div id="app">
+            <div style="margin:1em">
+                {{ render_messages() }}
+            </div>
+            {% block app %}{% endblock %}
+        </div>
     </div>
 </div>
+<script>
+    addEventListener("load", _ => {
+        const btn = document.getElementById('collapse');
+        const sdb = document.getElementById('sidebar');
+        btn.addEventListener("click", e => {
+            sdb.classList.toggle("sz");
+        });
+    })
+</script>
 </body>
 </html>

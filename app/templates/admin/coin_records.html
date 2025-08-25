@@ -1,0 +1,41 @@
+{% extends 'admin/admin_panel_base.html' %}
+{% block title %}金币记录{% endblock %}
+{% block app %}
+    <h3>金币记录</h3>
+    <form>
+        <div class="mb-3 form-floating">
+            <input type="number" id="user" placeholder="用户 ID" class="form-control" name="user">
+            <label for="user">用户 ID</label>
+
+        </div>
+        <button class="btn btn-primary">查询</button>
+    </form>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>时间</th>
+            <th>用户</th>
+            <th>缘由</th>
+            <th>获得（+）/支出（-）</th>
+            <th>结余</th>
+
+
+        </tr>
+        </thead>
+        <tbody>
+        {% for i in records %}
+            <tr>
+                <th>{{ i.id }}</th>
+                <td>{{ moment(i.time).format('LLLL') }}</td>
+
+                <td>{{ show_user(i.user) }}</td>
+                <td>{{ i.reason }}</td>
+                <td>{% if i.value > 0 %}+{{ i.value }}{% else %}{{ i.value }}{% endif %}</td>
+                <td>{{ i.remainder }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {{ page_util(page,max_page) }}
+{% endblock %}

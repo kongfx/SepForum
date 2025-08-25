@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}签到成功！{% endblock %}
+{% block content %}
+    <h3>签到成功！</h3>
+
+    <p>获得 <span style="font-weight: bolder;color: #f00;font-size: 120%">{{ points }}</span> 金币，<span style="font-weight: bolder;color: #f00;font-size: 120%">+{{ points }} EXP</span>！</p>
+    <p>你已连签 <span style="font-weight: bolder;color: #f00;font-size: 120%">{{ current_user.punch_days }}</span> 天，再连签 1 天得 <span style="font-weight: bolder;color: #f00;font-size: 120%">{{ next_points }}</span> 金币！</p>
+    <p>你现在有 <span style="font-weight: bolder;color: #f00;font-size: 120%">{{ current_user.points }}</span> 金币！</p>
+    {% if k %}
+        <i>你已经签过到了。</i>
+    {% endif %}
+{% endblock %}

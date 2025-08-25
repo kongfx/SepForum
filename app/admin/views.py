@@ -9,7 +9,7 @@ import datetime
 from flask import flash, request, redirect, url_for, g, render_template, abort
 from flask_login import current_user, logout_user, login_required
 
-from .forms import UserAdminForm, PostAdminForm, DenyUserForm
+from .forms import UserAdminForm, PostAdminForm, DenyUserForm, GiveUserCoinForm
 from ..captcha_lib import verify_captcha
 from ..html_render import md, allowed_tags, ALLOWED_ATTRIBUTES
 from ..decos import permission_required, admin_required
@@ -228,3 +228,41 @@ def clear_captcha():
     num = g.dbs.query(db.Captcha).delete()
     g.dbs.commit()
     return f'DELETE DONE; deleted {num} rows'
+
+@admin.route('/coin/records')
+@login_required
+@permission_required(Permission.COIN_MANAGE)
+def coin_records():
+    user_id = request.args.get('user', None)
+    if user_id is not None:
+        user = g.dbs.query(db.User).filter(db.User.id == user_id).first()
+        if not user:
+            abort(404)
+        records = user.coin_records
+    else:
+        records = g.dbs.query(db.CoinRecord)
+    page = request.args.get('page', 1, type=int)
+    max_page = math.ceil(records.count() / 25)
+    page = min(page, max_page)
+    records = records.limit(25).offset((page - 1) * 25).all()
+    return render_template('admin/coin_records.html', records=records, page=page, max_page=max_page)
+
+
+@admin.route('/coin/give', methods=['GET', 'POST'])
+@login_required
+@permission_required(Permission.COIN_MANAGE)
+def give_coin():
+    form = GiveUserCoinForm()
+    if form.validate_on_submit():
+        user = g.dbs.query(User).filter(User.id==form.user_id.data).first()
+        if not user:
+            flash('未找到用户。', 'error')
+            return redirect(url_for('.give_coin'))
+        if user.points + form.value.data < 0:
+            flash('用户余额不能为负数。', 'error')
+            return redirect(url_for('.give_coin'))
+        user.add_points(form.value.data, f'管理员 @{current_user.username} 操作；{form.reason.data}')
+        flash('操作成功。', 'success')
+        return redirect(url_for('.coin_records'))
+    return render_template('admin/give_coin.html', form=form)
+

@@ -6,5 +6,12 @@
         今天是 <b>{{ today.year }} 年 {{ today.month }} 月 {{ today.day }} 日</b>，{{ weeknum }}，{{ nongli }}。<br>
         {{ jieqi }}
     </div>
-
+    {% if current_user.is_authenticated %}
+    <div>
+    {% if current_user.punched %}
+        <i>你已经签过到了。</i>
+    {% endif %}
+        <p><a class="btn btn-primary" href="{{ url_for('points.punch') }}">我要签到</a></p>
+    </div>
+    {% endif %}
 {% endblock %}

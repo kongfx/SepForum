@@ -1,0 +1,6 @@
+{% extends "points/points_panel_base.html" %}
+{% block title %}我的余额{% endblock %}
+{% block app %}
+    <h3>我的余额</h3>
+	<p>您当前拥有金币 {{ current_user.points }} <img src="/static/coin.svg" alt="金币" width="25" height="25 ">。</p>
+{% endblock %}

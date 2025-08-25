@@ -2,7 +2,7 @@
 {% block title %}账号审核中{% endblock %}
 {% block content %}
     <h3>你好，{{ show_user(current_user) }}</h3>
-    <p>你已成功创建了你的论坛账号！现在你需要等待我们的审核才能正式加入论坛。一般情况下 5~10 天内审核。你的申请理由在下方，虽然无法更改但是你可以查看。</p>
+    <p>你已成功创建了你的{{ FORUM_NAME }}账号！现在你需要等待我们的审核才能正式加入{{ FORUM_NAME }}。一般情况下 5~10 天内审核。你的申请理由在下方，虽然无法更改但是你可以查看。</p>
     <pre>{{ current_user.reg_reason }}</pre>
     {% if current_user.confirm_denied %}
         <p>你的申请已被打回。打回理由：{{ current_user.ban_reason }}。</p>

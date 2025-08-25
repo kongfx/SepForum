@@ -45,3 +45,10 @@ class DenyUserForm(Form):
     reason = StringField('打回/封禁理由', render_kw={'autofocus': 'autofocus'})
     deny = SubmitField('打回')
     ban = SubmitField('封禁', render_kw={'class': 'btn btn-danger'})
+
+
+class GiveUserCoinForm(Form):
+    user_id = IntegerField('用户 ID', validators=[DataRequired()])
+    value = IntegerField('数量', validators=[DataRequired()])
+    reason = StringField('缘由', validators=[DataRequired(), Length(min=1, max=250)])
+    submit = SubmitField('保存更改')

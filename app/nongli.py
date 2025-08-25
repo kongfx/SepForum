@@ -44,5 +44,20 @@ def nongli():
         day = day2
     return day,weeknum,nongli,jieqi,today
 
+
+def calculate_punch_points(days: int) -> int:
+    if days == 1:
+        return 5
+    if days == 2:
+        return 5+4
+    if days == 3:
+        return 5+4+3
+    if days == 4:
+        return 5+4+3+2
+    if days >= 5:
+        return 5+4+3+2+days-4
+    return 0
+
+
 if __name__ == '__main__':
     print(nongli())
