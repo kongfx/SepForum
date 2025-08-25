@@ -1,0 +1,11 @@
+{% extends "points/points_panel_base.html" %}
+{% block title %}转账{% endblock %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block app %}
+    <h3>金币转账</h3>
+    {{ render_form(form) }}
+            {{ captcha('acp') }}
+
+    <p>爱护金币，谨防诈骗。转账不可撤销，请谨慎确认。点击确认转账将立即转账。</p>
+{% endblock %}

@@ -9,6 +9,7 @@ import datetime
 from flask import flash, request, redirect, url_for, g, render_template, abort
 from flask_login import current_user, logout_user, login_required
 
+from .forms import TransferForm
 from ..captcha_lib import verify_captcha
 from ..html_render import md, allowed_tags, ALLOWED_ATTRIBUTES
 from ..decos import permission_required, admin_required
@@ -53,4 +54,41 @@ def records():
     # print(type(records))
     records = records.limit(25).offset((page - 1) * 25).all()
     return render_template('points/records.html', records=records, page=page, max_page=max_page)
+
+
+@points.route('transfer', methods=['GET', 'POST'])
+@login_required
+def transfer():
+    form = TransferForm()
+    if form.validate_on_submit():
+        if not verify_captcha(form.captcha.data):
+            form.captcha.errors.append('验证码错误')
+            return render_template('points/transfer.html', form=form)
+        if not current_user.check_password(form.password.data):
+            form.password.errors.append('密码错误')
+            return render_template('points/transfer.html', form=form)
+        if form.value.data <= 0:
+            form.value.errors.append('金额必须大于 0')
+            return render_template('points/transfer.html', form=form)
+        if current_user.points < form.value.data:
+            form.value.errors.append('余额不足')
+            return render_template('points/transfer.html', form=form)
+        if form.user.data.isdigit():
+            user = g.dbs.query(User).get(int(form.user.data))
+        else:
+            user = g.dbs.query(User).filter(User.username == form.user.data).first()
+        if not user:
+            form.user.errors.append('用户不存在。')
+            return render_template('points/transfer.html', form=form)
+        if user.banned:
+            form.user.errors.append('用户被封禁。')
+            return render_template('points/transfer.html', form=form)
+        current_user.add_points(-form.value.data, f'转账给 @{user.username}。缘由：{form.reason.data}')
+        user.add_points(form.value.data, f'转账来自 @{current_user.username}。缘由：{form.reason.data}')
+        g.dbs.add(user)
+        g.dbs.add(current_user._get_current_object())
+        g.dbs.commit()
+        flash(f'转账成功。给 @{user.username} 转账了 {form.value.data} 金币。余额 {current_user.points} 金币。', 'success')
+        return redirect(url_for('points.points_view'))
+    return render_template('points/transfer.html', form=form)
 

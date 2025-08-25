@@ -16,10 +16,10 @@ def login():
             return render_template('auth/login.html', form=form)
         user = g.dbs.query(User).filter(User.username == form.username.data).first()
         if not user:
-            form.username.errors.append('User not found')
+            form.password.errors.append('用户名或密码错误')
             return render_template('auth/login.html', form=form)
         if not user.check_password(form.password.data):
-            form.password.errors.append('Invalid password')
+            form.password.errors.append('用户名或密码错误')
             return render_template('auth/login.html', form=form)
         if login_user(user, remember=form.remember_me.data):
             next = request.args.get('next')
