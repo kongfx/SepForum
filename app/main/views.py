@@ -1,3 +1,4 @@
+import base64
 import json
 import math
 import os
@@ -24,11 +25,15 @@ from .. import nongli
 captcha_fn = captcha.image.ImageCaptcha(width=180)
 POST_PER_PAGE = 20
 REPLY_PER_PAGE = 25
-
+day_sk = '5LuK5aSp5piv4oCc5LmdwrfkuIDlhavkuovlj5jigJ17fSDlkajlubTjgILlnKjmraTnuqrlv7XkuLrlm73nibrnibLnmoTng4jlo6vku6zvvIzmsLjlnoLkuI3mnL3vvIEK'
 
 @main.app_context_processor
 def context_processor():
-    return dict(timestamp=datetime.datetime.now().timestamp(), Permission=db.Permission, FORUM_NAME=os.environ.get('FORUM_NAME', '论坛'))
+    today = datetime.date.today()
+    y,m,d = nongli.get_nongli(today)
+    red_theme = m==1 and d in range(1,8) or os.environ['FORCE_RED_THEME']=='true'
+    grayscale = (today.month==9 and today.day == 18) or os.environ['FORCE_GRAYSCALE']=='true'
+    return dict(timestamp=datetime.datetime.now().timestamp(), Permission=db.Permission, FORUM_NAME=os.environ.get('FORUM_NAME', '论坛'), red_theme=red_theme, grayscale=grayscale)
 
 
 @main.before_app_request
@@ -89,9 +94,13 @@ def gen_captcha():
 
 @main.route('/')
 def index():
-    day, weeknum, nongli_, jieqi, today = nongli.nongli()
+    day, weeknum, nongli_, jieqi, today = nongli.nongli(datetime.date.today())
+    today = datetime.date.today()
+    y, m, d = nongli.get_nongli(today)
+    red_theme = m == 1 and d in range(1, 8) or os.environ['FORCE_RED_THEME'] == 'true'
+    grayscale = (today.month == 9 and today.day == 18) or os.environ['FORCE_GRAYSCALE'] == 'true'
     return render_template('index.html',
-                           day=day, weeknum=weeknum, nongli=nongli_, jieqi=jieqi, today=today)
+                           day=day, weeknum=weeknum, nongli=nongli_, jieqi=jieqi, today=today, red_theme=red_theme, grayscale=grayscale, sp_msg=base64.b64decode(day_sk).decode('utf-8').format(y-1931))
 
 
 @main.route('/user/<int:user_id>/')
@@ -181,8 +190,6 @@ def post(post_id):
     post = g.dbs.query(db.Post).filter(db.Post.id == post_id).first()
     if post is None:
         abort(404)
-    if post.show_author:
-        return redirect(url_for('anonymous_post', post_id=post.id))
 
     if post.banned and not current_user.is_ladmin:
         abort(404)
@@ -234,7 +241,7 @@ def post(post_id):
                            show_banned_reply=bool(current_user.perm & db.Permission.MODERATE_DISCUSSION),
                            page=page,
                            max_page=max_page,
-                           show_name=True
+                           show_name=not post.show_author
                            )
 
 

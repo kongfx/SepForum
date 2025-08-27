@@ -750,7 +750,7 @@
             overflow: hidden;
             margin-bottom: 2rem;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-            margin:1rem;
+            margin: 1rem;
         }
 
         .toc:hover {
@@ -834,13 +834,15 @@
         {#    background: #3498db;#}
         {#    opacity: 0.7;#}
         {#    transition: all 0.3s ease;#}
-        {#}#}
+        {
+        #}#}
 
         {#.toc > ul > li::before {#}
         {#    width: 10px;#}
         {#    height: 10px;#}
         {#    background: #2c3e50;#}
-        {#}#}
+        {
+        #}#}
 
         .toc a {
             text-decoration: none;
@@ -897,6 +899,23 @@
             font-size: 0.9rem;
             color: #7f8c8d;
         }
+
+        {% if grayscale %}
+            html {
+                -webkit-filter: grayscale(100%);
+                -moz-filter: grayscale(100%);
+                -ms-filter: grayscale(100%);
+                -o-filter: grayscale(100%);
+                filter: progid:DXImageTransform.Microsoft.BasicImage(grayscale=1);
+                filter: grayscale(100%);
+            }
+        {% endif %}
+        {% if red_theme %}
+            header{
+                background: rgba(227, 66, 52, 0.89);
+            }
+
+        {% endif %}
     </style>
     {% block headextra %}
 

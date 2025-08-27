@@ -42,7 +42,7 @@ def all_user():
 @admin_required
 @login_required
 def user_admin(user_id):
-    form = UserAdminForm()
+    form: UserAdminForm = UserAdminForm()
     user = g.dbs.query(db.User).filter(db.User.id == user_id).first()
 
     if form.validate_on_submit():
@@ -60,7 +60,8 @@ def user_admin(user_id):
                      form.perm_moddiscuss.data * db.Permission.MODERATE_DISCUSSION |
                      form.redname.data * db.Permission.RED_NAME |
                      form.admin.data * db.Permission.BACKSTAGE_ENTRANCE |
-                     form.site_admin.data * db.Permission.ADMINISTRATOR
+                     form.site_admin.data * db.Permission.ADMINISTRATOR |
+                     form.perm_manage_coin.data * db.Permission.COIN_MANAGE
                      )
         user.nickname = form.nickname.data
         user.badge = form.badge.data
@@ -80,7 +81,7 @@ def user_admin(user_id):
     form.redname.data = user.perm & db.Permission.RED_NAME
     form.admin.data = user.perm & db.Permission.BACKSTAGE_ENTRANCE
     form.site_admin.data = user.perm & db.Permission.ADMINISTRATOR
-
+    form.perm_manage_coin.data = user.perm & db.Permission.COIN_MANAGE
     form.nickname.data = user.nickname
     form.badge.data = user.badge
     form.banned.data = user.banned
@@ -106,8 +107,9 @@ def post_admin(post_id):
     form = PostAdminForm()
 
     forums = g.dbs.query(db.Forum).all()
-    form.forum.choices = [(x.id, x.name) for x in forums]
     post = g.dbs.query(db.Post).filter(db.Post.id == post_id).first()
+    form.forum.choices =[(post.forum_id, post.forum.name)]+[(x.id, x.name) for x in forums if x.id != post.forum_id]
+
     author = post.author
     if post.show_author and not current_user.is_admin:
         abort(404)

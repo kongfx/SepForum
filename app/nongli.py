@@ -1,6 +1,8 @@
 import datetime
+import functools
 
 import sxtwl
+
 Gan = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
 Zhi = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
 ShX = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"]
@@ -15,8 +17,9 @@ rmc = ["初一", "初二", "初三", "初四", "初五", "初六", "初七", "�
 XiZ = ['摩羯', '水瓶', '双鱼', '白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手']
 WeekCn = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
 
-def nongli():
-    today = datetime.date.today()
+
+@functools.cache
+def nongli(today):
     day = sxtwl.fromSolar(today.year, today.month, today.day)
     weeknum = WeekCn[day.getWeek()]
     ytg = day.getYearGZ(True)
@@ -42,20 +45,26 @@ def nongli():
 
                 break
         day = day2
-    return day,weeknum,nongli,jieqi,today
+    return day, weeknum, nongli, jieqi, today
+
+
+@functools.cache
+def get_nongli(today: datetime.date) -> tuple[int, int, int]:
+    day: sxtwl.Day = sxtwl.fromSolar(today.year, today.month, today.day)
+    return day.getLunarYear(), day.getLunarMonth(), day.getLunarDay()
 
 
 def calculate_punch_points(days: int) -> int:
     if days == 1:
         return 5
     if days == 2:
-        return 5+4
+        return 5 + 4
     if days == 3:
-        return 5+4+3
+        return 5 + 4 + 3
     if days == 4:
-        return 5+4+3+2
+        return 5 + 4 + 3 + 2
     if days >= 5:
-        return 5+4+3+2+days-4
+        return 5 + 4 + 3 + 2 + days - 4
     return 0
 
 

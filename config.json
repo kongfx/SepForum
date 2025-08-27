@@ -3,5 +3,7 @@
   "FORUM_NAME": "秋悦阁",
   "FORUM_ADMIN_USER_NAME": "root",
   "DATABASE_URL": "sqlite:///data.db",
-  "FLASK_CONFIG": "development"
+  "FLASK_CONFIG": "development",
+  "FORCE_GRAYSCALE": "false",
+  "FORCE_RED_THEME": "false"
 }

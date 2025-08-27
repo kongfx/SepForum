@@ -5,13 +5,22 @@
         <h3>欢迎回来 {{ show_user(current_user) }}，</h3>
         今天是 <b>{{ today.year }} 年 {{ today.month }} 月 {{ today.day }} 日</b>，{{ weeknum }}，{{ nongli }}。<br>
         {{ jieqi }}
+        {% if today.month == 9 and today.day == 18 %}
+            {{ day_sk }}
+        {% endif %}
+        {% if grayscale %}
+            <p>全站通告：因某些原因，全站设置黑白。详情请看论坛内通告。</p>
+        {% endif %}
+        {% if red_theme %}
+            <p>祝大家新年快乐！</p>
+        {% endif %}
     </div>
     {% if current_user.is_authenticated %}
-    <div>
-    {% if current_user.punched %}
-        <i>你已经签过到了。</i>
-    {% endif %}
-        <p><a class="btn btn-primary" href="{{ url_for('points.punch') }}">我要签到</a></p>
-    </div>
+        <div>
+            {% if current_user.punched %}
+                <i>你已经签过到了。</i>
+            {% endif %}
+            <p><a class="btn btn-primary" href="{{ url_for('points.punch') }}">我要签到</a></p>
+        </div>
     {% endif %}
 {% endblock %}

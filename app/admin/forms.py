@@ -10,9 +10,11 @@ class UserAdminForm(Form):
     perm_read = BooleanField('阅读帖子权限')
     perm_send_post = BooleanField('发帖权限')
     perm_reply = BooleanField('回帖权限')
-    perm_moddiscuss = BooleanField('帖子管理')
     redname = BooleanField('红名')
     admin = BooleanField('进入后台/基本管理权限')
+    perm_moddiscuss = BooleanField('帖子管理')
+    perm_manage_coin = BooleanField('金币管理')
+
     site_admin = BooleanField('超级管理')
 
     nickname = StringField('昵称')
@@ -52,3 +54,4 @@ class GiveUserCoinForm(Form):
     value = IntegerField('数量', validators=[DataRequired()])
     reason = StringField('缘由', validators=[DataRequired(), Length(min=1, max=250)])
     submit = SubmitField('保存更改')
+
