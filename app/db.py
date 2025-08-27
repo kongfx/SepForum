@@ -68,6 +68,7 @@ class User(Base, UserMixin):
     punch_days = Column(Integer, default=0)
     coin_records = relationship('CoinRecord', backref='user', lazy='dynamic')
     prize_codes = relationship('PrizeCode', backref='user', lazy='dynamic')
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if self.username == os.environ['FORUM_ADMIN_USER_NAME']:
@@ -104,7 +105,7 @@ class User(Base, UserMixin):
         if not self.last_punch_date:
             self.last_punch_date = datetime.date(2000, 1, 1)
 
-        no_punch_days = (datetime.date.today() - self.last_punch_date).days -1
+        no_punch_days = (datetime.date.today() - self.last_punch_date).days - 1
         self.last_punch_date = datetime.date.today()
         if no_punch_days > 0:
             self.punch_days = max(0, self.punch_days - no_punch_days)
@@ -117,8 +118,6 @@ class User(Base, UserMixin):
         record = CoinRecord(user_id=self.id, value=points, reason=reason, remainder=self.points)
         g.dbs.add(record)
         g.dbs.commit()
-
-
 
 
 class Post(Base):
@@ -230,6 +229,7 @@ class Prize(Base):
     icon_url = Column(String)
     banned = Column(Boolean, default=False)
     codes = relationship('PrizeCode', backref='prize', lazy='dynamic')
+    prize_value = Column(Integer)
 
 
 class PrizeCode(Base):
@@ -240,6 +240,8 @@ class PrizeCode(Base):
     prize_id = Column(Integer, ForeignKey('prizes.id'), nullable=False)
     code = Column(String)
     time = Column(DateTime, default=datetime.datetime.utcnow)
+    prize_value = Column(Integer)
+    usable_by_other = Column(Boolean, default=False)
 
 
 class CoinRecord(Base):

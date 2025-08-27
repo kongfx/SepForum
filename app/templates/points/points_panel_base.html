@@ -173,7 +173,7 @@
     </nav>
 {%- endmacro %}
 {% macro captcha(id) %}
-    <img src="{{ url_for('main.gen_captcha') }}?t={{ timestamp }}" alt="CAPTCHA" id="{{ id }}">
+    <img src="{{ url_for('main.gen_captcha') }}?t={{ timestamp }}" alt="CAPTCHA" id="{{ id }}" {% if id=='captcha' %}height="56"{% endif %}>
     <script>(d => {
         const _c = d.getElementById("{{id}}");
         _c.addEventListener('click', _ => {
@@ -913,18 +913,18 @@
             <li><a href="{{ url_for(".points_view") }}"><i class="bi bi-coin"></i><span>我的余额</span></a>
             </li>
             {#        <li>BBB</li>#}
-            <li><a href="{{ url_for(".points_view") }}"><i class="bi bi-bag"></i><span>金币商店</span></a>
+            <li><a href="{{ url_for(".shop") }}"><i class="bi bi-bag"></i><span>金币商店</span></a>
             </li>
-            <li><a href="{{ url_for(".points_view") }}"><i class="bi bi-cart"></i><span>购物车</span></a>
-            </li>
+{#            <li><a href="{{ url_for(".points_view") }}"><i class="bi bi-cart"></i><span>购物车</span></a>#}
+{#            </li>#}
             <li><a href="{{ url_for(".transfer") }}"><i
                     class="bi bi-arrow-left-right"></i><span>金币转账</span></a>
             <li><a href="{{ url_for(".records") }}"><i class="bi bi-file-text"></i><span>金币记录</span></a>
             </li>
             <li><a href="{{ url_for(".points_view") }}"><i
                     class="bi bi-gift"></i><span>奖励兑换</span></a></li>
-            <li><a href="{{ url_for(".points_view") }}"><i
-                    class="bi bi-search"></i><span>兑换码查询</span></a></li>
+            <li><a href="{{ url_for(".order_list") }}"><i
+                    class="bi bi-search"></i><span>购买记录</span></a></li>
             <li><a href="{{ url_for(".points_view") }}"><i
                     class="bi bi-plus"></i><span>获得金币</span></a></li>
         </ul>

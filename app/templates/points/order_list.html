@@ -1,0 +1,36 @@
+{% extends 'points/points_panel_base.html' %}
+{% block title %}兑换记录{% endblock %}
+{% block app %}
+    <h3>兑换记录</h3>
+	<table class="table table-hover">
+    <thead>
+            <tr>
+                <th>#</th>
+                <th>奖品</th>
+                <th>时间</th>
+
+                <th>是否可被他人使用</th>
+                <th>消费</th>
+                <th>是否可用</th>
+                <th>兑换码</th>
+                <th>操作</th>
+
+            </tr>
+        </thead>
+    <tbody>
+    {% for i in orders %}
+        <tr>
+        <th>{{ i.id }}</th>
+        <td>{{ i.prize.name }}</td>
+        <td>{{  moment(i.time).format('LLLL')  }}</td>
+        <td>{% if i.usable_by_other %}是{% else %}否{% endif %}</td>
+        <td>{{ i.prize.need_points }}</td>
+        <td>{% if not i.banned %}是{% else %}否{% endif %}{{ i.remainder }}</td>
+        <td>{{ i.code }}</td>
+        <td><a href="{{ url_for('.order', order_id=i.id) }}">查看</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    {{ page_util(page,max_page) }}
+{% endblock %}

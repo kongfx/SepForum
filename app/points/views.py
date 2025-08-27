@@ -1,6 +1,7 @@
 import json
 import math
 import time
+import uuid
 
 import bleach
 import captcha.image
@@ -9,11 +10,11 @@ import datetime
 from flask import flash, request, redirect, url_for, g, render_template, abort
 from flask_login import current_user, logout_user, login_required
 
-from .forms import TransferForm
+from .forms import TransferForm, BuyCheckForm, RedeemForm
 from ..captcha_lib import verify_captcha
 from ..html_render import md, allowed_tags, ALLOWED_ATTRIBUTES
 from ..decos import permission_required, admin_required
-from ..db import DBSession, User, Permission, Forum
+from ..db import DBSession, User, Permission, Forum, PrizeCode
 from .. import db
 from . import points
 from .. import captcha_lib
@@ -92,3 +93,65 @@ def transfer():
         return redirect(url_for('points.points_view'))
     return render_template('points/transfer.html', form=form)
 
+
+@points.route('/shop/')
+@login_required
+def shop():
+    prizes = g.dbs.query(db.Prize)
+
+    page = request.args.get('page', 1, type=int)
+    max_page = math.ceil(prizes.count() / 25)
+    page = min(page, max_page)
+    # print(type(records))
+    prizes = prizes.limit(25).offset((page - 1) * 25).all()
+    return render_template('points/shop.html', prizes=prizes, page=page, max_page=max_page)
+
+
+@points.route('/buy/<int:prize_id>', methods=['GET', 'POST'])
+@login_required
+def buy(prize_id):
+    prize = g.dbs.query(db.Prize).get(prize_id)
+    if not prize:
+        abort(404)
+    form = BuyCheckForm()
+    if form.validate_on_submit():
+        print(1)
+        current_user.add_points(-prize.need_points, f'购买商品 "{prize.name}"#{prize.id}，{"" if form.usable_by_other.data else "不"}可被他人使用。')
+        prize_code = PrizeCode(user_id=current_user.id, code=str(uuid.uuid4()), prize_value=prize.prize_value, usable_by_other=form.usable_by_other.data, prize_id=prize.id)
+        g.dbs.add(prize_code)
+        g.dbs.add(current_user._get_current_object())
+        g.dbs.commit()
+        return redirect(url_for('points.order', order_id=prize_code.id))
+    return render_template('points/buy.html', prize=prize, form=form)
+
+
+@points.route('/order/<int:order_id>', methods=['GET', 'POST'])
+@login_required
+def order(order_id):
+    order = g.dbs.query(db.PrizeCode).get(order_id)
+    if not order:
+        abort(404)
+    if order.user_id != current_user.id:
+        abort(404)
+    return render_template('points/buy_success.html', ps=order)
+
+
+@points.route('/order/list')
+@login_required
+def order_list():
+    orders = current_user.prize_codes
+
+    page = request.args.get('page', 1, type=int)
+    max_page = math.ceil(orders.count() / 25)
+    page = min(page, max_page)
+    # print(type(records))
+    orders = orders.limit(25).offset((page - 1) * 25).all()
+    return render_template('points/order_list.html', orders=orders, page=page, max_page=max_page)
+
+#
+# @points.route('/redeem/', methods=['GET', 'POST'])
+# @login_required
+# def redeem():
+#     form = RedeemForm()
+#     if form.validate_on_submit():
+#         order = g.dbs.query(db.PrizeCode).filter()

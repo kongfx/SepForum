@@ -1,0 +1,11 @@
+{% extends "points/points_panel_base.html" %}
+{% block title %}奖励兑换{% endblock %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block app %}
+    <h3>奖励兑换</h3>
+    {{ render_form(form) }}
+            {{ captcha('acp') }}
+
+    <p>输入兑换码。仅适用于金币兑换券。</p>
+{% endblock %}

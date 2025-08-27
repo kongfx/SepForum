@@ -9,3 +9,14 @@ class TransferForm(Form):
     password = PasswordField('密码', validators=[DataRequired()])
     captcha = StringField('验证码', validators=[DataRequired(), Length(min=6, max=6)])
     submit = SubmitField('确认转账')
+
+class BuyCheckForm(Form):
+    usable_by_other = BooleanField('是否可被他人使用')
+    captcha = StringField('验证码', validators=[DataRequired(), Length(min=6, max=6)])
+    submit = SubmitField('确认购买')
+
+
+class RedeemForm(Form):
+    code = StringField('兑换码', validators=[DataRequired()])
+    captcha = StringField('验证码', validators=[DataRequired(), Length(min=6, max=6)])
+    submit = SubmitField('确认兑换')
