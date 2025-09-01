@@ -245,7 +245,7 @@
                 <span class="prize-name">{{prize.name}}</span>
                 <span class="prize-price"><img src="/static/coin.svg" alt="金币" width="25" height="25 ">{{prize.need_points}}</span>
                 <span class="prize-description">{{prize.description}}</span>
-                <a href="#" class="buy-btn">立即兑换</a>
+                <a href="{{ url_for('.buy',prize_id=prize.id) }}" class="buy-btn">立即兑换</a>
             </div>
             </div>
         {% endfor %}
